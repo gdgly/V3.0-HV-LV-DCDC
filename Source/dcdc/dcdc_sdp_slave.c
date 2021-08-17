@@ -41,36 +41,37 @@ static uint32_t sdp_output_voltage_1_get(void);
 static uint32_t sdp_output_current_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get(void);
-static uint32_t sdp_input_over_current_counter_get(void);
+static uint32_t sdp_output_over_current_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_1_over_temperature_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void);
-static uint32_t sdp_input_voltage_rms_over_voltage_counter_get(void);
+static uint32_t sdp_output_over_voltage_counter_get(void);
 static uint32_t sdp_dcdc_state_get(void);
 static uint32_t sdp_voltage_loop_gain_get(void);
 static uint32_t sdp_current_loop_gain_get(void);
-static uint32_t sdp_input_voltage_slope_q16_get(void);
-static uint32_t sdp_input_voltage_offset_q16_get(void);
-static uint32_t sdp_input_current_slope_q16_get(void);
-static uint32_t sdp_input_current_offset_q16_get(void);
+static uint32_t sdp_output_voltage_slope_q16_get(void);
+static uint32_t sdp_output_voltage_offset_q16_get(void);
+static uint32_t sdp_output_current_slope_q16_get(void);
+static uint32_t sdp_output_current_offset_q16_get(void);
 
 static bool sdp_serial_number_set(uint32_t value);
-static bool sdp_input_over_current_counter_set(uint32_t value);
+static bool sdp_output_over_current_counter_set(uint32_t value);
 static bool sdp_llc_secondary_heatsink_1_over_temperature_counter_set(uint32_t value);
 static bool sdp_llc_secondary_heatsink_2_over_temperature_counter_set(uint32_t value);
-static bool sdp_input_voltage_rms_over_voltage_counter_set(uint32_t value);
+static bool sdp_output_over_voltage_counter_set(uint32_t value);
 static bool sdp_master_startup_set(uint32_t value);
 static bool sdp_master_shutdown_set(uint32_t value);
 static bool sdp_open_loop_enable_set(uint32_t value);
-static bool sdp_open_loop_hf_legs_enable_set(uint32_t value);
-static bool sdp_open_loop_inrush_protection_enable_set(uint32_t value);
-static bool sdp_open_loop_hf_legs_duty_set(uint32_t value);
+static bool sdp_open_loop_primary_enable_set(uint32_t value);
+static bool sdp_open_loop_active_dummy_load_enable_set(uint32_t value);
+static bool sdp_open_loop_oring_fet_enable_set(uint32_t value);
+static bool sdp_open_loop_primary_frequency_set(uint32_t value);
 static bool sdp_voltage_loop_gain_set(uint32_t value);
 static bool sdp_current_loop_gain_set(uint32_t value);
 static bool sdp_enter_factory_mode_set(uint32_t value);
-static bool sdp_input_voltage_slope_q16_set(uint32_t value);
-static bool sdp_input_voltage_offset_q16_set(uint32_t value);
-static bool sdp_input_current_slope_q16_set(uint32_t value);
-static bool sdp_input_current_offset_q16_set(uint32_t value);
+static bool sdp_output_voltage_slope_q16_set(uint32_t value);
+static bool sdp_output_voltage_offset_q16_set(uint32_t value);
+static bool sdp_output_current_slope_q16_set(uint32_t value);
+static bool sdp_output_current_offset_q16_set(uint32_t value);
 
 static const struct sdp_get sdp_get_array[] =
 {
@@ -81,39 +82,40 @@ static const struct sdp_get sdp_get_array[] =
     { 12U, &sdp_output_current_x100_get},
     { 14U, &sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get},
     { 15U, &sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get},
-    { 22U, &sdp_input_over_current_counter_get},
+    { 22U, &sdp_output_over_current_counter_get},
     { 25U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_get},
     { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_get},
-    { 30U, &sdp_input_voltage_rms_over_voltage_counter_get},
+    { 30U, &sdp_output_over_voltage_counter_get},
     { 40U, &sdp_dcdc_state_get},
     { 51U, &sdp_voltage_loop_gain_get},
     { 52U, &sdp_current_loop_gain_get},
-    {101U, &sdp_input_voltage_slope_q16_get},
-    {102U, &sdp_input_voltage_offset_q16_get},
-    {103U, &sdp_input_current_slope_q16_get},
-    {104U, &sdp_input_current_offset_q16_get},
+    {101U, &sdp_output_voltage_slope_q16_get},
+    {102U, &sdp_output_voltage_offset_q16_get},
+    {103U, &sdp_output_current_slope_q16_get},
+    {104U, &sdp_output_current_offset_q16_get},
 };
 
 static const struct sdp_set sdp_set_array[] =
 {
     {  2U, &sdp_serial_number_set},
-    { 22U, &sdp_input_over_current_counter_set},
+    { 22U, &sdp_output_over_current_counter_set},
     { 25U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_set},
     { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_set},
-    { 30U, &sdp_input_voltage_rms_over_voltage_counter_set},
+    { 30U, &sdp_output_over_voltage_counter_set},
     { 41U, &sdp_master_startup_set},
     { 42U, &sdp_master_shutdown_set},
     { 43U, &sdp_open_loop_enable_set},
-    { 44U, &sdp_open_loop_hf_legs_enable_set},
-    { 46U, &sdp_open_loop_inrush_protection_enable_set},
-    { 47U, &sdp_open_loop_hf_legs_duty_set},
+    { 44U, &sdp_open_loop_primary_enable_set},
+    { 46U, &sdp_open_loop_active_dummy_load_enable_set},
+    { 47U, &sdp_open_loop_oring_fet_enable_set},
+    { 48U, &sdp_open_loop_primary_frequency_set},
     { 51U, &sdp_voltage_loop_gain_set},
     { 52U, &sdp_current_loop_gain_set},
     {100U, &sdp_enter_factory_mode_set},
-    {101U, &sdp_input_voltage_slope_q16_set},
-    {102U, &sdp_input_voltage_offset_q16_set},
-    {103U, &sdp_input_current_slope_q16_set},
-    {104U, &sdp_input_current_offset_q16_set},
+    {101U, &sdp_output_voltage_slope_q16_set},
+    {102U, &sdp_output_voltage_offset_q16_set},
+    {103U, &sdp_output_current_slope_q16_set},
+    {104U, &sdp_output_current_offset_q16_set},
 };
 
 
@@ -191,7 +193,7 @@ static uint32_t sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get(void)
 //
 //
 //
-static uint32_t sdp_input_over_current_counter_get(void)
+static uint32_t sdp_output_over_current_counter_get(void)
 {
     return dcdc_output_over_current_counter_get();
 }
@@ -215,7 +217,7 @@ static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void)
 //
 //
 //
-static uint32_t sdp_input_voltage_rms_over_voltage_counter_get(void)
+static uint32_t sdp_output_over_voltage_counter_get(void)
 {
     return dcdc_output_voltage_over_voltage_counter_get();
 }
@@ -247,7 +249,7 @@ static uint32_t sdp_current_loop_gain_get(void)
 //
 //
 //
-static uint32_t sdp_input_voltage_slope_q16_get(void)
+static uint32_t sdp_output_voltage_slope_q16_get(void)
 {
     return FLOAT_TO_Q16(dcdc_factory_s.output_voltage.slope);
 }
@@ -255,7 +257,7 @@ static uint32_t sdp_input_voltage_slope_q16_get(void)
 //
 //
 //
-static uint32_t sdp_input_voltage_offset_q16_get(void)
+static uint32_t sdp_output_voltage_offset_q16_get(void)
 {
     return FLOAT_TO_Q16(dcdc_factory_s.output_voltage.offset);
 }
@@ -263,7 +265,7 @@ static uint32_t sdp_input_voltage_offset_q16_get(void)
 //
 //
 //
-static uint32_t sdp_input_current_slope_q16_get(void)
+static uint32_t sdp_output_current_slope_q16_get(void)
 {
     return FLOAT_TO_Q16(dcdc_factory_s.output_current.slope);
 }
@@ -271,7 +273,7 @@ static uint32_t sdp_input_current_slope_q16_get(void)
 //
 //
 //
-static uint32_t sdp_input_current_offset_q16_get(void)
+static uint32_t sdp_output_current_offset_q16_get(void)
 {
     return FLOAT_TO_Q16(dcdc_factory_s.output_current.offset);
 }
@@ -292,7 +294,7 @@ static bool sdp_serial_number_set(uint32_t value)
 //
 //
 //
-static bool sdp_input_over_current_counter_set(uint32_t value)
+static bool sdp_output_over_current_counter_set(uint32_t value)
 {
     dcdc_output_over_current_counter_reset();
     return true;
@@ -319,7 +321,7 @@ static bool sdp_llc_secondary_heatsink_2_over_temperature_counter_set(uint32_t v
 //
 //
 //
-static bool sdp_input_voltage_rms_over_voltage_counter_set(uint32_t value)
+static bool sdp_output_over_voltage_counter_set(uint32_t value)
 {
     dcdc_output_voltage_over_voltage_counter_reset();
     return true;
@@ -355,27 +357,37 @@ static bool sdp_open_loop_enable_set(uint32_t value)
 //
 //
 //
-static bool sdp_open_loop_hf_legs_enable_set(uint32_t value)
+static bool sdp_open_loop_primary_enable_set(uint32_t value)
 {
     bool enable = (value != 0UL) ? true : false;
-    return dcdc_open_loop_hf_legs_enable_set(enable);
+    return dcdc_open_loop_primary_enable_set(enable);
 }
 
 //
 //
 //
-static bool sdp_open_loop_inrush_protection_enable_set(uint32_t value)
+static bool sdp_open_loop_active_dummy_load_enable_set(uint32_t value)
 {
     bool enable = (value != 0UL) ? true : false;
-    return dcdc_open_loop_inrush_protection_enable_set(enable);
+    return dcdc_open_loop_active_dummy_load_enable_set(enable);
 }
 
 //
 //
 //
-static bool sdp_open_loop_hf_legs_duty_set(uint32_t value)
+static bool sdp_open_loop_oring_fet_enable_set(uint32_t value)
 {
-    return dcdc_open_loop_hf_legs_duty_set(value);
+    bool enable = (value != 0UL) ? true : false;
+    return dcdc_open_loop_oring_fet_enable_set(enable);
+}
+
+//
+//
+//
+static bool sdp_open_loop_primary_frequency_set(uint32_t value)
+{
+    uint16_t period = PWM_PERIOD_IN_COUNTS_UP_COUNTER(value);
+    return dcdc_open_loop_primary_period_set(period);
 }
 
 //
@@ -414,7 +426,7 @@ static bool sdp_enter_factory_mode_set(uint32_t value)
 //
 //
 //
-static bool sdp_input_voltage_slope_q16_set(uint32_t value)
+static bool sdp_output_voltage_slope_q16_set(uint32_t value)
 {
     if (!sdp_factory_mode_enabled)
         return false;
@@ -432,7 +444,7 @@ static bool sdp_input_voltage_slope_q16_set(uint32_t value)
 //
 //
 //
-static bool sdp_input_voltage_offset_q16_set(uint32_t value)
+static bool sdp_output_voltage_offset_q16_set(uint32_t value)
 {
     if (!sdp_factory_mode_enabled)
         return false;
@@ -450,7 +462,7 @@ static bool sdp_input_voltage_offset_q16_set(uint32_t value)
 //
 //
 //
-static bool sdp_input_current_slope_q16_set(uint32_t value)
+static bool sdp_output_current_slope_q16_set(uint32_t value)
 {
     if (!sdp_factory_mode_enabled)
         return false;
@@ -468,7 +480,7 @@ static bool sdp_input_current_slope_q16_set(uint32_t value)
 //
 //
 //
-static bool sdp_input_current_offset_q16_set(uint32_t value)
+static bool sdp_output_current_offset_q16_set(uint32_t value)
 {
     if (!sdp_factory_mode_enabled)
         return false;

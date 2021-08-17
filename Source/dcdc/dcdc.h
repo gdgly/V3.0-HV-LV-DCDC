@@ -32,7 +32,7 @@
 #define DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT     0.0f
 
 
-#define DCDC_INPUT_CURRENT_SETPOINT_MAX_RMS      50.0f
+#define DCDC_OUTPUT_CURRENT_SETPOINT_MAX         50.0f
 
 
 
@@ -69,15 +69,15 @@ union dcdc_cpu_cla_union_t
 
 struct dcdc_cla_to_cpu
 {
-    union dcdc_cpu_cla_union_t v_in_raw;
+
 };
 
 struct dcdc_cpu_to_cla
 {
     union dcdc_cpu_cla_union_t dcdc_state;
-    union dcdc_cpu_cla_union_t open_loop_hf_legs_duty;
+    union dcdc_cpu_cla_union_t open_loop_primary_period;
 
-    float32_t current_setpoint_max_rms_raw;
+    float32_t current_setpoint_max_raw;
     float32_t voltage_loop_gain;
     float32_t current_loop_gain;
 };
@@ -133,9 +133,11 @@ extern void dcdc_output_voltage_over_voltage_counter_reset(void);
 extern void dcdc_master_startup_set(void);
 extern void dcdc_master_shutdown_set(void);
 extern bool dcdc_open_loop_enable_set(bool enable);
-extern bool dcdc_open_loop_hf_legs_enable_set(bool enable);
-extern bool dcdc_open_loop_inrush_protection_enable_set(bool enable);
-extern bool dcdc_open_loop_hf_legs_duty_set(uint16_t duty);
+extern bool dcdc_open_loop_primary_enable_set(bool enable);
+extern bool dcdc_open_loop_sr_enable_set(bool enable);
+extern bool dcdc_open_loop_active_dummy_load_enable_set(bool enable);
+extern bool dcdc_open_loop_oring_fet_enable_set(bool enable);
+extern bool dcdc_open_loop_primary_period_set(uint16_t period);
 
 
 extern volatile struct dcdc_cla_to_cpu dcdc_cla_to_cpu_mem;

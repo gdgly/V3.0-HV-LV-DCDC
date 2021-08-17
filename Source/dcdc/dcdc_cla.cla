@@ -89,13 +89,11 @@ static inline void dcdc_cla_adc_filter(void)
     temp = v_out_1_raw * DCDC_LPF_ALPHA_OUTPUT_VOLTAGE;
     temp += (dcdc_cla_v_out_1_raw_filtered * (1.0f - DCDC_LPF_ALPHA_OUTPUT_VOLTAGE));
     dcdc_cla_v_out_1_raw_filtered = temp;
-    dcdc_cla_to_cpu_mem.v_in_raw.cla = (int32_t)temp;
 
     float32_t v_out_2_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_VOLTAGE_2;
     temp = v_out_2_raw * DCDC_LPF_ALPHA_OUTPUT_VOLTAGE;
     temp += (dcdc_cla_v_out_2_raw_filtered * (1.0f - DCDC_LPF_ALPHA_OUTPUT_VOLTAGE));
     dcdc_cla_v_out_2_raw_filtered = temp;
-    dcdc_cla_to_cpu_mem.v_in_raw.cla = (int32_t)temp;
 }
 
 //
@@ -139,7 +137,8 @@ static inline float32_t dcdc_cla_current_compensator_execute(float32_t v_loop_ou
     float32_t y0;
     float32_t temp;
 
-    float32_t current_setpoint_raw = v_loop_output;
+    float32_t current_setpoint_raw =
+            v_loop_output * dcdc_cpu_to_cla_mem.current_setpoint_max_raw;
     x0 = current_setpoint_raw - dcdc_cla_i_out_raw_filtered;
     temp = x0 * dcdc_cpu_to_cla_mem.current_loop_gain;
     temp *= DCDC_CLA_CURRENT_COMPENSATOR_A0;
@@ -167,7 +166,7 @@ static inline float32_t dcdc_cla_current_compensator_execute(float32_t v_loop_ou
 static inline float32_t dcdc_cla_open_loop_control_execute(void)
 {
 
-    return (float32_t)dcdc_cpu_to_cla_mem.open_loop_hf_legs_duty.cla * 0.01f;
+    return (float32_t)dcdc_cpu_to_cla_mem.open_loop_primary_period.cla * 0.01f;
 }
 
 //
@@ -263,6 +262,4 @@ __attribute__((interrupt)) void dcdc_cla_initialization_task(void)
     dcdc_cla_current_compensator.x2 = 0.0f;
     dcdc_cla_current_compensator.y1 = 0.0f;
     dcdc_cla_current_compensator.y2 = 0.0f;
-
-    dcdc_cla_to_cpu_mem.v_in_raw.cla = 0L;
 }
