@@ -26,6 +26,16 @@
 
 #define DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD    5
 
+#define DCDC_OUTPUT_CURRENT_REVERSE_DEFAULT_CALIBRATION_CALCULATE(i)    (uint16_t)(((i) \
+        - DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT) / DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
+#define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF     5.0f
+#define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF_RAW \
+    DCDC_OUTPUT_CURRENT_REVERSE_DEFAULT_CALIBRATION_CALCULATE(DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF)
+#define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_QUALIFY    3.0f
+#define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_QUALIFY_RAW \
+    DCDC_OUTPUT_CURRENT_REVERSE_DEFAULT_CALIBRATION_CALCULATE(DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_QUALIFY)
+
+
 
 static bool dcdc_master_startup_shutdown;
 static bool dcdc_open_loop_enable;
@@ -58,8 +68,6 @@ static uint16_t dcdc_output_current_sw_over_current_counter;
 static uint16_t dcdc_llc_secondary_heatsink_1_over_temperature_counter;
 static uint16_t dcdc_llc_secondary_heatsink_2_over_temperature_counter;
 static uint16_t dcdc_output_voltage_over_voltage_counter;
-
-static int32_t dcdc_inrush_relay_to_close_delay_us;
 
 
 
@@ -130,9 +138,17 @@ static void dcdc_oring_fet_disable(void)
 //
 //
 //
-static uint32_t dcdc_primary_fault_signal_status_get(void)
+static uint32_t dcdc_pfc_fault_signal_status_get(void)
 {
     return GPIO_readPin(17);
+}
+
+//
+//
+//
+static uint32_t dcdc_interlock_signal_status_get(void)
+{
+    return GPIO_readPin(23);
 }
 
 //
@@ -151,6 +167,7 @@ static void dcdc_shutdown_command_service(void)
         dcdc_open_loop_sr_enable = false;
         dcdc_open_loop_active_dummy_load_enable = false;
         dcdc_open_loop_oring_fet_enable = false;
+        dcdc_cpu_to_cla_mem.open_loop_primary_period.cpu = EPWM1_PERIOD_MIN;
         dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_SHUTDOWN;
     }
 }
@@ -163,26 +180,48 @@ static void dcdc_fault_shutdown_service(void)
     if (dcdc_critical_faults_active)
     {
         if (dcdc_cpu_to_cla_mem.dcdc_state.cpu
-                        > DCDC_STATE_WAITING_FOR_INPUT_VOLTAGE_QUALIFICATION)
-                    dcdc_cpu_to_cla_mem.dcdc_state.cpu =
-                            DCDC_STATE_WAITING_FOR_CRITICAL_FAULTS_TO_CLEAR;
+                        > DCDC_STATE_WAITING_FOR_FAULTS_FROM_PFC_TO_CLEAR)
+        {
+            dcdc_pwm_primary_disable_and_lock();
+            dcdc_pwm_sr_disable();
+            dcdc_active_dummy_load_disable();
+            // TODO: Decouple ORing FET from state machine
+            dcdc_oring_fet_disable();
+            dcdc_cpu_to_cla_mem.dcdc_state.cpu =
+                    DCDC_STATE_WAITING_FOR_CRITICAL_FAULTS_TO_CLEAR;
+        }
     }
     else if (dcdc_non_critical_faults_active)
     {
         if (dcdc_cpu_to_cla_mem.dcdc_state.cpu
                 > DCDC_STATE_WAITING_FOR_NON_CRITICAL_FAULTS_TO_CLEAR)
+        {
+            dcdc_pwm_primary_disable_and_lock();
+            dcdc_pwm_sr_disable();
+            dcdc_active_dummy_load_disable();
+            dcdc_oring_fet_disable();
             dcdc_cpu_to_cla_mem.dcdc_state.cpu =
                     DCDC_STATE_WAITING_FOR_NON_CRITICAL_FAULTS_TO_CLEAR;
+        }
     }
 }
 
 //
 //
 //
-static bool dcdc_primary_fault_evaluate(void)
+static bool dcdc_pfc_fault_evaluate(void)
 {
-    uint32_t status = dcdc_primary_fault_signal_status_get();
+    uint32_t status = dcdc_pfc_fault_signal_status_get();
     return (status != 0UL);
+}
+
+//
+//
+//
+static bool dcdc_interlock_fault_evaluate(void)
+{
+    uint32_t status = dcdc_interlock_signal_status_get();
+    return (status == 0UL);
 }
 
 //
@@ -215,9 +254,10 @@ static bool dcdc_output_over_current_evaluate(void)
 
 //
 //
-//
+// TODO: Remove this? Is it necessary?
 static bool dcdc_output_current_sw_over_current_evaluate(void)
 {
+    // TODO: Use filtered signal from CLA?
     uint16_t i_out_raw = DCDC_ADC_RESULT_OUTPUT_CURRENT;
     if (i_out_raw > dcdc_output_current_ocp_cutoff_raw)
     {
@@ -267,6 +307,7 @@ static bool dcdc_llc_secondary_heatsink_2_over_temperature_evaluate(void)
 //
 static bool dcdc_output_voltage_over_voltage_evaluate(void)
 {
+    // TODO: Use filtered signal from CLA?
     uint16_t v_out_1_raw = DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1;
     if (v_out_1_raw > dcdc_output_voltage_ovp_cutoff_raw)
     {
@@ -287,14 +328,16 @@ static void dcdc_faults_service(void)
     bool non_critical_faults_active = false;
     bool critical_faults_active = false;
 
+    // TODO: Add HW OVP
     non_critical_faults_active |= dcdc_output_over_current_evaluate();
     non_critical_faults_active |= dcdc_output_current_sw_over_current_evaluate();
     non_critical_faults_active |= dcdc_llc_secondary_heatsink_1_over_temperature_evaluate();
     non_critical_faults_active |= dcdc_llc_secondary_heatsink_2_over_temperature_evaluate();
+    non_critical_faults_active |= dcdc_output_voltage_over_voltage_evaluate();
     dcdc_non_critical_faults_active = non_critical_faults_active;
 
-    critical_faults_active |= dcdc_primary_fault_evaluate();
-    critical_faults_active |= dcdc_output_voltage_over_voltage_evaluate();
+    critical_faults_active |= dcdc_interlock_fault_evaluate();
+    critical_faults_active |= dcdc_pfc_fault_evaluate();
     dcdc_critical_faults_active = critical_faults_active;
 }
 
@@ -308,7 +351,8 @@ static void dcdc_shutdown_state_service(void)
         if (dcdc_open_loop_enable)
             dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_OPEN_LOOP;
         else
-            dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_WAITING_FOR_INPUT_VOLTAGE_QUALIFICATION;
+            dcdc_cpu_to_cla_mem.dcdc_state.cpu =
+                    DCDC_STATE_WAITING_FOR_FAULTS_FROM_PFC_TO_CLEAR;
     }
 }
 
@@ -349,34 +393,21 @@ static void dcdc_open_loop_state_service(void)
 static void dcdc_waiting_for_critical_faults_to_clear_state_service(void)
 {
     if (!dcdc_critical_faults_active)
-        dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_WAITING_FOR_INPUT_VOLTAGE_QUALIFICATION;
-}
-
-//
-//
-//
-static void dcdc_waiting_for_input_voltage_qualification_state_service(void)
-{
-    // TODO:
-    bool input_voltage_qualified = true;
-    if (input_voltage_qualified)
-    {
-        dcdc_active_dummy_load_disable();
-        dcdc_inrush_relay_to_close_delay_us =
-                CPUTimer_getTimerCount(CPUTIMER0_BASE) + MILLISECONDS_IN_uS;
         dcdc_cpu_to_cla_mem.dcdc_state.cpu =
-                DCDC_STATE_WAITING_FOR_INRUSH_RELAY_TO_CLOSE_DELAY_TO_EXPIRE;
-    }
+                DCDC_STATE_WAITING_FOR_FAULTS_FROM_PFC_TO_CLEAR;
 }
 
 //
 //
 //
-static void dcdc_waiting_for_inrush_relay_to_close_delay_to_expire_state_service(void)
+static void dcdc_waiting_for_faults_from_pfc_to_clear_state_service(void)
 {
-    int32_t cpu_time_us = CPUTimer_getTimerCount(CPUTIMER0_BASE);
-    if (IS_CPU_TIME_AFTER(cpu_time_us, dcdc_inrush_relay_to_close_delay_us))
-        dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_WAITING_FOR_NON_CRITICAL_FAULTS_TO_CLEAR;
+    // TODO: Review state machine diagram
+    if (!dcdc_critical_faults_active)
+    {
+        dcdc_cpu_to_cla_mem.dcdc_state.cpu =
+                DCDC_STATE_WAITING_FOR_NON_CRITICAL_FAULTS_TO_CLEAR;
+    }
 }
 
 //
@@ -385,7 +416,11 @@ static void dcdc_waiting_for_inrush_relay_to_close_delay_to_expire_state_service
 static void dcdc_waiting_for_non_critical_faults_to_clear_state_service(void)
 {
     if (!dcdc_non_critical_faults_active)
+    {
+        dcdc_pwm_primary_enable_and_unlock();
+        dcdc_pwm_sr_enable();
         dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_WAITING_FOR_SOFT_START_TO_FINISH;
+    }
 }
 
 //
@@ -395,6 +430,34 @@ static void dcdc_waiting_for_soft_start_to_finish_state_service(void)
 {
     // TODO: Soft start
     dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_NORMAL;
+}
+
+//
+//
+//
+static void dcdc_normal_operation_service(void)
+{
+    // TODO: Use filtered signal from CLA
+    if (DCDC_ADC_RESULT_OUTPUT_CURRENT
+            < DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_QUALIFY_RAW)
+    {
+        dcdc_active_dummy_load_enable();
+        dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_LIGHT_LOAD_OPERATION;
+    }
+}
+
+//
+//
+//
+static void dcdc_light_load_operation_service(void)
+{
+    // TODO: Use filtered signal from CLA
+    if (DCDC_ADC_RESULT_OUTPUT_CURRENT
+            > DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF_RAW)
+    {
+        dcdc_active_dummy_load_disable();
+        dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_NORMAL;
+    }
 }
 
 //
@@ -469,7 +532,7 @@ void dcdc_slow_init(void)
     dcdc_pwm_sr_disable();
     dcdc_active_dummy_load_disable();
     dcdc_oring_fet_disable();
-    dcdc_primary_fault_signal_status_get();
+    dcdc_pfc_fault_signal_status_get();
 }
 
 //
@@ -492,11 +555,8 @@ void dcdc_state_machine_service(void)
         case DCDC_STATE_WAITING_FOR_CRITICAL_FAULTS_TO_CLEAR:
             dcdc_waiting_for_critical_faults_to_clear_state_service();
             break;
-        case DCDC_STATE_WAITING_FOR_INPUT_VOLTAGE_QUALIFICATION:
-            dcdc_waiting_for_input_voltage_qualification_state_service();
-            break;
-        case DCDC_STATE_WAITING_FOR_INRUSH_RELAY_TO_CLOSE_DELAY_TO_EXPIRE:
-            dcdc_waiting_for_inrush_relay_to_close_delay_to_expire_state_service();
+        case DCDC_STATE_WAITING_FOR_FAULTS_FROM_PFC_TO_CLEAR:
+            dcdc_waiting_for_faults_from_pfc_to_clear_state_service();
             break;
         case DCDC_STATE_WAITING_FOR_NON_CRITICAL_FAULTS_TO_CLEAR:
             dcdc_waiting_for_non_critical_faults_to_clear_state_service();
@@ -505,7 +565,10 @@ void dcdc_state_machine_service(void)
             dcdc_waiting_for_soft_start_to_finish_state_service();
             break;
         case DCDC_STATE_NORMAL:
-            // Do nothing
+            dcdc_normal_operation_service();
+            break;
+        case DCDC_STATE_LIGHT_LOAD_OPERATION:
+            dcdc_light_load_operation_service();
             break;
         default:
             dcdc_master_startup_shutdown = false;

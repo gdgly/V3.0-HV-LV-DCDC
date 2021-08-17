@@ -34,7 +34,7 @@ volatile struct dcdc_cpu_to_cla dcdc_cpu_to_cla_mem;
 static void dcdc_cpu_to_cla_struct_init(void)
 {
     dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_SHUTDOWN;
-    dcdc_cpu_to_cla_mem.open_loop_primary_period.cpu = 0U;
+    dcdc_cpu_to_cla_mem.open_loop_primary_period.cpu = EPWM1_PERIOD_MIN;
 
     dcdc_cpu_to_cla_mem.voltage_loop_gain = 1.0f;
     dcdc_cpu_to_cla_mem.current_loop_gain = 1.0f;

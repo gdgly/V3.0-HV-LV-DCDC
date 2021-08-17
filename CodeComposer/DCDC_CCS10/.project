@@ -66,6 +66,46 @@
 			<locationURI>SOURCE_LOC/crc/crc.c</locationURI>
 		</link>
 		<link>
+			<name>Source/dcdc_cla.cla</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_cla.cla</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_cla_api.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_cla_api.c</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_init.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_init.c</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_isr.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_isr.c</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_main.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_main.c</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_sdp_master.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_sdp_master.c</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_sdp_slave.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_sdp_slave.c</locationURI>
+		</link>
+		<link>
+			<name>Source/dcdc_slow.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/dcdc/dcdc_slow.c</locationURI>
+		</link>
+		<link>
 			<name>Source/device.c</name>
 			<type>1</type>
 			<locationURI>SOURCE_LOC/common/source/device.c</locationURI>
@@ -126,46 +166,6 @@
 			<locationURI>SOURCE_LOC/pers/pers.c</locationURI>
 		</link>
 		<link>
-			<name>Source/dcdc_cla.cla</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_cla.cla</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_cla_api.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_cla_api.c</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_init.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_init.c</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_isr.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_isr.c</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_main.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_main.c</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_sdp_master.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_sdp_master.c</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_sdp_slave.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_sdp_slave.c</locationURI>
-		</link>
-		<link>
-			<name>Source/dcdc_slow.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/dcdc/dcdc_slow.c</locationURI>
-		</link>
-		<link>
 			<name>Source/sci.c</name>
 			<type>1</type>
 			<locationURI>SOURCE_LOC/driverlib/sci.c</locationURI>
@@ -184,6 +184,11 @@
 			<name>Source/sdp_slave.c</name>
 			<type>1</type>
 			<locationURI>SOURCE_LOC/sdp/sdp_slave.c</locationURI>
+		</link>
+		<link>
+			<name>Source/slot_shelf_id.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/slot_shelf_id/slot_shelf_id.c</locationURI>
 		</link>
 		<link>
 			<name>Source/spi.c</name>
