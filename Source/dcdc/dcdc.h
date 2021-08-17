@@ -25,30 +25,26 @@
 #define EPWM5_PERIOD        PWM_PERIOD_IN_COUNTS_UP_COUNTER(EPWM5_FREQ)
 
 
-#define DCDC_CALIBRATION_V_BUS_SLOPE_DEFAULT     1.0f
-#define DCDC_CALIBRATION_V_BUS_OFFSET_DEFAULT    0.0f
+#define DCDC_CALIBRATION_V_OUT_SLOPE_DEFAULT      1.0f
+#define DCDC_CALIBRATION_V_OUT_OFFSET_DEFAULT     0.0f
 
-#define DCDC_CALIBRATION_V_IN_SLOPE_DEFAULT      1.0f
-#define DCDC_CALIBRATION_V_IN_OFFSET_DEFAULT     0.0f
-
-#define DCDC_CALIBRATION_I_IN_SLOPE_DEFAULT      1.0f
-#define DCDC_CALIBRATION_I_IN_OFFSET_DEFAULT     0.0f
+#define DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT      1.0f
+#define DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT     0.0f
 
 
 #define DCDC_INPUT_CURRENT_SETPOINT_MAX_RMS      50.0f
 
 
 
-#define DCDC_ADC_RESULT_INPUT_VOLTAGE_P                  ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER0)
-#define DCDC_ADC_RESULT_INPUT_CURRENT                    ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER1)
-#define DCDC_ADC_RESULT_DCDC_HEATSINK_1_TEMPERATURE       ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER2)
-#define DCDC_ADC_RESULT_INPUT_VOLTAGE_N                  ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER0)
-#define DCDC_ADC_RESULT_DCDC_HEATSINK_2_TEMPERATURE       ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER1)
-#define DCDC_ADC_RESULT_HW_REVISION                      ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER2)
-#define DCDC_ADC_RESULT_BUS_VOLTAGE                      ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER0)
-#define DCDC_ADC_RESULT_ADC_REFERENCE_VOLTAGE            ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER1)
-#define DCDC_ADC_RESULT_AMBIENT_TEMPERATURE              ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2)
-#define DCDC_ADC_RESULT_LLC_PRIMARY_HEATSINK_TEMPERATURE ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER3)
+#define DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1                        ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER0)
+#define DCDC_ADC_RESULT_OUTPUT_CURRENT                          ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER1)
+#define DCDC_ADC_RESULT_LLC_SECONDARY_HEATSINK_1_TEMPERATURE    ADC_readResult(ADCARESULT_BASE, ADC_SOC_NUMBER2)
+#define DCDC_ADC_RESULT_OUTPUT_VOLTAGE_2                        ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER0)
+#define DCDC_ADC_RESULT_LLC_SECONDARY_HEATSINK_2_TEMPERATURE    ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER1)
+#define DCDC_ADC_RESULT_HW_REVISION                             ADC_readResult(ADCBRESULT_BASE, ADC_SOC_NUMBER2)
+#define DCDC_ADC_RESULT_OUTPUT_CURRENT_EXTERNAL_SETPOINT        ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER0)
+#define DCDC_ADC_RESULT_SHLEF_ID                                ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER1)
+#define DCDC_ADC_RESULT_SLOT_ID                                 ADC_readResult(ADCCRESULT_BASE, ADC_SOC_NUMBER2)
 
 
 enum dcdc_states
@@ -73,16 +69,12 @@ union dcdc_cpu_cla_union_t
 
 struct dcdc_cla_to_cpu
 {
-    union dcdc_cpu_cla_union_t i_in_raw_rms;
-    union dcdc_cpu_cla_union_t v_in_raw_rms;
-    union dcdc_cpu_cla_union_t v_bus_raw;
     union dcdc_cpu_cla_union_t v_in_raw;
 };
 
 struct dcdc_cpu_to_cla
 {
     union dcdc_cpu_cla_union_t dcdc_state;
-    union dcdc_cpu_cla_union_t sync_tick_total_per_period;
     union dcdc_cpu_cla_union_t open_loop_hf_legs_duty;
 
     float32_t current_setpoint_max_rms_raw;
@@ -103,8 +95,8 @@ struct dcdc_calibration_constants
 struct dcdc_factory
 {
     uint32_t serial_number;
-    struct dcdc_calibration_constants input_voltage;
-    struct dcdc_calibration_constants input_current;
+    struct dcdc_calibration_constants output_voltage;
+    struct dcdc_calibration_constants output_current;
 };
 
 
@@ -117,49 +109,31 @@ extern void dcdc_sdp_init(void);
 extern void dcdc_state_machine_service(void);
 extern void dcdc_sdp_service(void);
 
-extern uint32_t dcdc_fan_rpm_get(void);
 extern void dcdc_temperatures_filtering_service(void);
-extern void dcdc_input_voltage_thresholds_reverse_calibration_service(void);
-extern void dcdc_input_current_thresholds_reverse_calibration_service(void);
+extern void dcdc_output_voltage_thresholds_reverse_calibration_service(void);
+extern void dcdc_output_current_thresholds_reverse_calibration_service(void);
 
 // cla tasks
 extern void dcdc_cla_task_1(void);
 extern void dcdc_cla_initialization_task(void);
 
 
-extern int16_t dcdc_ambient_temperature_x100_get(void);
-extern int16_t dcdc_heatsink_1_temperature_x100_get(void);
-extern int16_t dcdc_heatsink_2_temperature_x100_get(void);
-extern int16_t dcdc_llc_primary_heatsink_temperature_x100_get(void);
+extern int16_t dcdc_llc_secondary_heatsink_1_temperature_x100_get(void);
+extern int16_t dcdc_llc_secondary_heatsink_2_temperature_x100_get(void);
 extern enum dcdc_states dcdc_state_get(void);
-extern uint16_t dcdc_bus_under_voltage_counter_get(void);
-extern uint16_t dcdc_bus_over_voltage_counter_get(void);
-extern uint16_t dcdc_input_over_current_counter_get(void);
-extern uint16_t dcdc_input_current_rms_over_current_counter_get(void);
-extern uint16_t dcdc_ambient_over_temperature_counter_get(void);
-extern uint16_t dcdc_heatsink_1_over_temperature_counter_get(void);
-extern uint16_t dcdc_heatsink_2_over_temperature_counter_get(void);
-extern uint16_t dcdc_llc_primary_heatsink_over_temperature_counter_get(void);
-extern uint16_t dcdc_input_frequency_out_of_range_counter_get(void);
-extern uint16_t dcdc_input_voltage_rms_under_voltage_counter_get(void);
-extern uint16_t dcdc_input_voltage_rms_over_voltage_counter_get(void);
+extern uint16_t dcdc_output_over_current_counter_get(void);
+extern uint16_t dcdc_llc_secondary_heatsink_1_over_temperature_counter_get(void);
+extern uint16_t dcdc_llc_secondary_heatsink_2_over_temperature_counter_get(void);
+extern uint16_t dcdc_output_voltage_over_voltage_counter_get(void);
 
-extern void dcdc_bus_under_voltage_counter_reset(void);
-extern void dcdc_bus_over_voltage_counter_reset(void);
-extern void dcdc_input_over_current_counter_reset(void);
-extern void dcdc_input_current_rms_over_current_counter_reset(void);
-extern void dcdc_ambient_over_temperature_counter_reset(void);
-extern void dcdc_heatsink_1_over_temperature_counter_reset(void);
-extern void dcdc_heatsink_2_over_temperature_counter_reset(void);
-extern void dcdc_llc_primary_heatsink_over_temperature_counter_reset(void);
-extern void dcdc_input_frequency_out_of_range_counter_reset(void);
-extern void dcdc_input_voltage_rms_under_voltage_counter_reset(void);
-extern void dcdc_input_voltage_rms_over_voltage_counter_reset(void);
+extern void dcdc_output_over_current_counter_reset(void);
+extern void dcdc_llc_secondary_heatsink_1_over_temperature_counter_reset(void);
+extern void dcdc_llc_secondary_heatsink_2_over_temperature_counter_reset(void);
+extern void dcdc_output_voltage_over_voltage_counter_reset(void);
 extern void dcdc_master_startup_set(void);
 extern void dcdc_master_shutdown_set(void);
 extern bool dcdc_open_loop_enable_set(bool enable);
 extern bool dcdc_open_loop_hf_legs_enable_set(bool enable);
-extern bool dcdc_open_loop_lf_leg_enable_set(bool enable);
 extern bool dcdc_open_loop_inrush_protection_enable_set(bool enable);
 extern bool dcdc_open_loop_hf_legs_duty_set(uint16_t duty);
 

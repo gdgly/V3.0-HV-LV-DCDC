@@ -241,6 +241,13 @@ static void initADC(void)
     // Configure Slot ID conversion.
     ADC_setupSOC(ADCC_BASE, ADC_SOC_NUMBER2, ADC_TRIGGER_EPWM1_SOCA,
                  ADC_CH_ADCIN2, ADC_ACQUISITION_WINDOW_SIZE);
+
+
+    // Enabling ADCA interrupt to trigger CLA Task 1
+    ADC_enableContinuousMode(ADCA_BASE, ADC_INT_NUMBER1);
+    ADC_setInterruptSource(ADCA_BASE, ADC_INT_NUMBER1, ADC_SOC_NUMBER1);
+    ADC_clearInterruptStatus(ADCA_BASE, ADC_INT_NUMBER1);
+    ADC_enableInterrupt(ADCA_BASE, ADC_INT_NUMBER1);
 }
 
 //
@@ -445,10 +452,10 @@ static void initCPUTimers(void)
 static void factory_defaults_load(void)
 {
     dcdc_factory_s.serial_number = 0UL;
-    dcdc_factory_s.input_voltage.slope = 1.0f;
-    dcdc_factory_s.input_voltage.offset = 0.0f;
-    dcdc_factory_s.input_current.slope = 1.0f;
-    dcdc_factory_s.input_current.offset = 0.0f;
+    dcdc_factory_s.output_voltage.slope = 1.0f;
+    dcdc_factory_s.output_voltage.offset = 0.0f;
+    dcdc_factory_s.output_current.slope = 1.0f;
+    dcdc_factory_s.output_current.offset = 0.0f;
 }
 
 

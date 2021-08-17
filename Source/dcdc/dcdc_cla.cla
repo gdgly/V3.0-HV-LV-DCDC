@@ -12,14 +12,13 @@
 #include "dcdc.h"
 
 
-#define DCDC_LPF_ALPHA_INPUT_CURRENT 0.5f // f_cutoff = 7.72kHz at 70kHz sampling frequency
-#define DCDC_LPF_ALPHA_INPUT_VOLTAGE 0.5f // f_cutoff = 7.72kHz at 70kHz sampling frequency
-#define DCDC_LPF_ALPHA_BUS_VOLTAGE   0.000179503468f // f_cutoff = 2Hz at 70kHz sampling frequency
+#define DCDC_LPF_ALPHA_OUTPUT_CURRENT 0.5f // f_cutoff = 7.72kHz at 70kHz sampling frequency
+#define DCDC_LPF_ALPHA_OUTPUT_VOLTAGE 0.5f // f_cutoff = 7.72kHz at 70kHz sampling frequency
 
 // TODO: ALL these values are placeholders.
-#define DCDC_CLA_VOLTAGE_SETPOINT        380.0f
-#define DCDC_CLA_VOLTAGE_SETPOINT_RAW    ((DCDC_CLA_VOLTAGE_SETPOINT - DCDC_CALIBRATION_V_BUS_OFFSET_DEFAULT) \
-                                         / DCDC_CALIBRATION_V_BUS_SLOPE_DEFAULT)
+#define DCDC_CLA_VOLTAGE_SETPOINT        54.0f
+#define DCDC_CLA_VOLTAGE_SETPOINT_RAW    ((DCDC_CLA_VOLTAGE_SETPOINT - DCDC_CALIBRATION_V_OUT_OFFSET_DEFAULT) \
+                                         / DCDC_CALIBRATION_V_OUT_SLOPE_DEFAULT)
 
 #define DCDC_CLA_VOLTAGE_COMPENSATOR_A0  1.0f
 #define DCDC_CLA_VOLTAGE_COMPENSATOR_A1  1.0f
@@ -40,26 +39,6 @@
 #define DCDC_CLA_CURRENT_LOOP_OUTPUT_MIN 0.0f
 #define DCDC_CLA_CURRENT_LOOP_OUTPUT_MAX 1.0f
 
-#define DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD      20.0f
-#define DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD_RAW  \
-    ((DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD - DCDC_CALIBRATION_V_IN_OFFSET_DEFAULT) / DCDC_CALIBRATION_V_IN_SLOPE_DEFAULT)
-
-#define DCDC_CLA_ZC_DELAY_COUNT_MAX  10UL
-#define DCDC_CLA_HF_DEADBAND_SOFT_START_INIT     ((EPWM1_PERIOD_MAX / 2U) + 2UL) // the +2 is to avoid some spurious pulses.
-#define DCDC_CLA_HF_DEADBAND_SOFT_START_DELTA    \
-    ((DCDC_CLA_HF_DEADBAND_SOFT_START_INIT - EPWM1_DEADBAND) / DCDC_CLA_ZC_DELAY_COUNT_MAX)
-
-
-enum dcdc_cla_zero_crossing_states
-{
-    WAITING_FOR_INITIAL_NEGATIVE_ZC,
-    NEGATIVE_ZC_1,
-    NEGATIVE_ZC_2,
-    NEGATIVE_HALF,
-    POSITIVE_ZC_1,
-    POSITIVE_ZC_2,
-    POSITIVE_HALF,
-};
 
 struct dcdc_cla_2p2z
 {
@@ -70,25 +49,12 @@ struct dcdc_cla_2p2z
 };
 
 
-static float32_t dcdc_cla_i_in_raw_offset_removed;
-static float32_t dcdc_cla_v_in_raw_offset_removed;
-static float32_t dcdc_cla_i_in_raw_filtered;
-static float32_t dcdc_cla_v_in_raw_filtered;
-static float32_t dcdc_cla_v_bus_raw_filtered;
-
-static uint32_t dcdc_cla_rms_accumulator_count;
-static float32_t dcdc_cla_i_in_raw_rms_accumulator;
-static float32_t dcdc_cla_v_in_raw_rms_accumulator;
+static float32_t dcdc_cla_i_out_raw_filtered;
+static float32_t dcdc_cla_v_out_1_raw_filtered;
+static float32_t dcdc_cla_v_out_2_raw_filtered;
 
 static struct dcdc_cla_2p2z dcdc_cla_voltage_compensator;
 static struct dcdc_cla_2p2z dcdc_cla_current_compensator;
-
-static float32_t dcdc_cla_input_voltage_raw_peak_previous_cycle;
-static float32_t dcdc_cla_input_voltage_raw_peak_current;
-
-static uint32_t dcdc_cla_zero_crossing_state;
-static uint32_t dcdc_cla_zero_crossing_delay_counter;
-static uint32_t dcdc_cla_hf_deadband_soft_start_value;
 
 
 //
@@ -114,49 +80,22 @@ static inline void dcdc_cla_adc_filter(void)
 {
     float32_t temp;
 
-    float32_t i_in_raw = (float32_t)DCDC_ADC_RESULT_INPUT_CURRENT;
-    // TODO: Should v_ref_raw be filtered with a much lower cutoff frequency?
-    float32_t v_ref_raw = (float32_t)DCDC_ADC_RESULT_ADC_REFERENCE_VOLTAGE;
-    dcdc_cla_i_in_raw_offset_removed = i_in_raw - v_ref_raw;
-    temp = dcdc_cla_i_in_raw_offset_removed * DCDC_LPF_ALPHA_INPUT_CURRENT;
-    temp += (dcdc_cla_i_in_raw_filtered * (1.0f - DCDC_LPF_ALPHA_INPUT_CURRENT));
-    dcdc_cla_i_in_raw_filtered = temp;
+    float32_t i_out_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_CURRENT;
+    temp = i_out_raw * DCDC_LPF_ALPHA_OUTPUT_CURRENT;
+    temp += (dcdc_cla_i_out_raw_filtered * (1.0f - DCDC_LPF_ALPHA_OUTPUT_CURRENT));
+    dcdc_cla_i_out_raw_filtered = temp;
 
-    float32_t v_in_p_raw = (float32_t)DCDC_ADC_RESULT_INPUT_VOLTAGE_P;
-    float32_t v_in_n_raw = (float32_t)DCDC_ADC_RESULT_INPUT_VOLTAGE_N;
-    dcdc_cla_v_in_raw_offset_removed = (v_in_p_raw - v_in_n_raw) - v_ref_raw;
-    temp = dcdc_cla_v_in_raw_offset_removed * DCDC_LPF_ALPHA_INPUT_VOLTAGE;
-    temp += (dcdc_cla_v_in_raw_filtered * (1.0f - DCDC_LPF_ALPHA_INPUT_VOLTAGE));
-    dcdc_cla_v_in_raw_filtered = temp;
+    float32_t v_out_1_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1;
+    temp = v_out_1_raw * DCDC_LPF_ALPHA_OUTPUT_VOLTAGE;
+    temp += (dcdc_cla_v_out_1_raw_filtered * (1.0f - DCDC_LPF_ALPHA_OUTPUT_VOLTAGE));
+    dcdc_cla_v_out_1_raw_filtered = temp;
     dcdc_cla_to_cpu_mem.v_in_raw.cla = (int32_t)temp;
 
-    float32_t v_bus_raw = (float32_t)DCDC_ADC_RESULT_BUS_VOLTAGE;
-    temp = v_bus_raw * DCDC_LPF_ALPHA_BUS_VOLTAGE;
-    temp += (dcdc_cla_v_bus_raw_filtered * (1.0f - DCDC_LPF_ALPHA_BUS_VOLTAGE));
-    dcdc_cla_v_bus_raw_filtered = temp;
-    dcdc_cla_to_cpu_mem.v_bus_raw.cla = (uint32_t)dcdc_cla_v_bus_raw_filtered;
-}
-
-//
-//
-//
-static inline void dcdc_cla_input_voltage_peak_detection(void)
-{
-    if (dcdc_cla_v_in_raw_offset_removed < 0.0f)
-    {
-        if (dcdc_cla_input_voltage_raw_peak_current > 100.0f)
-            // This check is to prevent miscalculation
-            // due to spurious noise close to the zero crossing.
-            dcdc_cla_input_voltage_raw_peak_previous_cycle =
-                    dcdc_cla_input_voltage_raw_peak_current;
-
-        dcdc_cla_input_voltage_raw_peak_current = 1.0f;
-    }
-    else
-    {
-        if (dcdc_cla_input_voltage_raw_peak_current < dcdc_cla_v_in_raw_offset_removed)
-            dcdc_cla_input_voltage_raw_peak_current = dcdc_cla_v_in_raw_offset_removed;
-    }
+    float32_t v_out_2_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_VOLTAGE_2;
+    temp = v_out_2_raw * DCDC_LPF_ALPHA_OUTPUT_VOLTAGE;
+    temp += (dcdc_cla_v_out_2_raw_filtered * (1.0f - DCDC_LPF_ALPHA_OUTPUT_VOLTAGE));
+    dcdc_cla_v_out_2_raw_filtered = temp;
+    dcdc_cla_to_cpu_mem.v_in_raw.cla = (int32_t)temp;
 }
 
 //
@@ -168,7 +107,8 @@ static inline float32_t dcdc_cla_voltage_compensator_execute(void)
     float32_t y0;
     float32_t temp;
 
-    x0 = DCDC_CLA_VOLTAGE_SETPOINT_RAW - dcdc_cla_v_bus_raw_filtered;
+    // TODO: How do we use dcdc_cla_v_out_2_raw_filtered?
+    x0 = DCDC_CLA_VOLTAGE_SETPOINT_RAW - dcdc_cla_v_out_1_raw_filtered;
     // TODO: Dynamic gain depending on error?
     temp = x0 * dcdc_cpu_to_cla_mem.voltage_loop_gain;
     temp *= DCDC_CLA_VOLTAGE_COMPENSATOR_A0;
@@ -199,12 +139,8 @@ static inline float32_t dcdc_cla_current_compensator_execute(float32_t v_loop_ou
     float32_t y0;
     float32_t temp;
 
-    float32_t normalized_current_reference =
-            dcdc_cla_v_in_raw_offset_removed / dcdc_cla_input_voltage_raw_peak_previous_cycle;
-    float32_t current_setpoint_raw =
-            v_loop_output * (dcdc_cpu_to_cla_mem.current_setpoint_max_rms_raw * SQRT_2);
-    current_setpoint_raw *=  normalized_current_reference;
-    x0 = current_setpoint_raw - dcdc_cla_i_in_raw_offset_removed;
+    float32_t current_setpoint_raw = v_loop_output;
+    x0 = current_setpoint_raw - dcdc_cla_i_out_raw_filtered;
     temp = x0 * dcdc_cpu_to_cla_mem.current_loop_gain;
     temp *= DCDC_CLA_CURRENT_COMPENSATOR_A0;
     temp += (dcdc_cla_current_compensator.x1 * DCDC_CLA_CURRENT_COMPENSATOR_A1);
@@ -290,137 +226,8 @@ static inline void dcdc_cla_pwm_update(float32_t duty)
     EPWM_setCounterCompareValue(EPWM2_BASE, EPWM_COUNTER_COMPARE_A, cmpa_value);
 }
 
-//
-//
-//
-static inline void dcdc_cla_lf_outputs_force(
-        EPWM_ActionQualifierSWOutput output_a,
-        EPWM_ActionQualifierSWOutput output_b)
-{
-    EPWM_setActionQualifierContSWForceAction(EPWM3_BASE, EPWM_AQ_OUTPUT_A, output_a);
-    EPWM_setActionQualifierContSWForceAction(EPWM3_BASE, EPWM_AQ_OUTPUT_B, output_b);
-
-}
-
-//
-//
-//
-static inline void dcdc_cla_hf_deadband_set(uint16_t deadband)
-{
-    EPWM_setRisingEdgeDelayCount(EPWM1_BASE, deadband);
-    EPWM_setFallingEdgeDelayCount(EPWM1_BASE, deadband);
-    EPWM_setRisingEdgeDelayCount(EPWM2_BASE, deadband);
-    EPWM_setFallingEdgeDelayCount(EPWM2_BASE, deadband);
-}
-
-//
-//
-//
-static inline void dcdc_cla_zero_crossing_state_machine_service(void)
-{
-    switch (dcdc_cla_zero_crossing_state)
-    {
-        // TODO: What if we lose the input voltage?
-        case WAITING_FOR_INITIAL_NEGATIVE_ZC:
-            if (dcdc_cla_v_in_raw_filtered < DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD_RAW)
-                dcdc_cla_zero_crossing_state = NEGATIVE_ZC_1;
-            break;
-        case NEGATIVE_ZC_1:
-            if (dcdc_cla_v_in_raw_filtered < -DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD_RAW)
-            {
-                dcdc_cla_hf_deadband_soft_start_value = DCDC_CLA_HF_DEADBAND_SOFT_START_INIT;
-                dcdc_cla_zero_crossing_delay_counter = 0UL;
-                dcdc_cla_zero_crossing_state = NEGATIVE_ZC_2;
-            }
-            break;
-        case NEGATIVE_ZC_2:
-            dcdc_cla_hf_deadband_soft_start_value -= DCDC_CLA_HF_DEADBAND_SOFT_START_DELTA;
-            dcdc_cla_hf_deadband_set((uint16_t)dcdc_cla_hf_deadband_soft_start_value);
-
-            dcdc_cla_zero_crossing_delay_counter++;
-            if ((uint16_t)dcdc_cla_zero_crossing_delay_counter
-                    >= (uint16_t)DCDC_CLA_ZC_DELAY_COUNT_MAX)
-            {
-                dcdc_cla_lf_outputs_force(EPWM_AQ_SW_OUTPUT_HIGH, EPWM_AQ_SW_OUTPUT_LOW);
-                dcdc_cla_hf_deadband_set(EPWM1_DEADBAND);
-                dcdc_cla_zero_crossing_state = NEGATIVE_HALF;
-            }
-            break;
-        case NEGATIVE_HALF:
-            if (dcdc_cla_v_in_raw_filtered > -DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD_RAW)
-            {
-                dcdc_cla_lf_outputs_force(EPWM_AQ_SW_OUTPUT_LOW, EPWM_AQ_SW_OUTPUT_LOW);
-                dcdc_cla_hf_deadband_set(DCDC_CLA_HF_DEADBAND_SOFT_START_INIT);
-                dcdc_cla_zero_crossing_state = POSITIVE_ZC_1;
-            }
-            break;
-        case POSITIVE_ZC_1:
-            if (dcdc_cla_v_in_raw_filtered > DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD_RAW)
-            {
-                dcdc_cla_hf_deadband_soft_start_value = DCDC_CLA_HF_DEADBAND_SOFT_START_INIT;
-                dcdc_cla_zero_crossing_delay_counter = 0UL;
-                dcdc_cla_zero_crossing_state = POSITIVE_ZC_2;
-            }
-            break;
-        case POSITIVE_ZC_2:
-            dcdc_cla_hf_deadband_soft_start_value -= DCDC_CLA_HF_DEADBAND_SOFT_START_DELTA;
-            dcdc_cla_hf_deadband_set((uint16_t)dcdc_cla_hf_deadband_soft_start_value);
-
-            dcdc_cla_zero_crossing_delay_counter++;
-            if ((uint16_t)dcdc_cla_zero_crossing_delay_counter
-                    >= (uint16_t)DCDC_CLA_ZC_DELAY_COUNT_MAX)
-            {
-                dcdc_cla_lf_outputs_force(EPWM_AQ_SW_OUTPUT_LOW, EPWM_AQ_SW_OUTPUT_HIGH);
-                dcdc_cla_hf_deadband_set(EPWM1_DEADBAND);
-                dcdc_cla_zero_crossing_state = POSITIVE_HALF;
-            }
-            break;
-        case POSITIVE_HALF:
-            if (dcdc_cla_v_in_raw_filtered < DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD_RAW)
-            {
-                dcdc_cla_lf_outputs_force(EPWM_AQ_SW_OUTPUT_LOW, EPWM_AQ_SW_OUTPUT_LOW);
-                dcdc_cla_hf_deadband_set(DCDC_CLA_HF_DEADBAND_SOFT_START_INIT);
-                dcdc_cla_zero_crossing_state = NEGATIVE_ZC_1;
-            }
-            break;
-        default:
-            dcdc_cla_lf_outputs_force(EPWM_AQ_SW_OUTPUT_LOW, EPWM_AQ_SW_OUTPUT_LOW);
-            dcdc_cla_hf_deadband_set(DCDC_CLA_HF_DEADBAND_SOFT_START_INIT);
-            dcdc_cla_zero_crossing_state = WAITING_FOR_INITIAL_NEGATIVE_ZC;
-            break;
-    }
-}
-
-//
-//
-//
-static inline void dcdc_cla_rms_calculate(void)
-{
-    float32_t i_in_raw_offset_removed = dcdc_cla_i_in_raw_offset_removed;
-    dcdc_cla_i_in_raw_rms_accumulator += (i_in_raw_offset_removed * i_in_raw_offset_removed);
-
-    float32_t v_in_raw_offset_removed = dcdc_cla_v_in_raw_offset_removed;
-    dcdc_cla_v_in_raw_rms_accumulator += (v_in_raw_offset_removed * v_in_raw_offset_removed);
 
 
-    dcdc_cla_rms_accumulator_count++;
-    if ((uint16_t)dcdc_cla_rms_accumulator_count
-            >= (uint16_t)dcdc_cpu_to_cla_mem.sync_tick_total_per_period.cla)
-    {
-        float32_t mean_square;
-        mean_square =
-                dcdc_cla_i_in_raw_rms_accumulator / (float32_t)dcdc_cla_rms_accumulator_count;
-        dcdc_cla_to_cpu_mem.i_in_raw_rms.cla = (uint32_t)__sqrt(mean_square);
-
-        mean_square =
-                dcdc_cla_v_in_raw_rms_accumulator / (float32_t)dcdc_cla_rms_accumulator_count;
-        dcdc_cla_to_cpu_mem.v_in_raw_rms.cla = (uint32_t)__sqrt(mean_square);
-
-        dcdc_cla_i_in_raw_rms_accumulator = 0.0f;
-        dcdc_cla_v_in_raw_rms_accumulator = 0.0f;
-        dcdc_cla_rms_accumulator_count = 0UL;
-    }
-}
 
 //
 //
@@ -430,18 +237,10 @@ __attribute__((interrupt)) void dcdc_cla_task_1(void)
     dcdc_cla_profiling_pin_set();
 
     dcdc_cla_adc_filter();
-    dcdc_cla_input_voltage_peak_detection();
 
     float32_t duty = dcdc_cla_control_execute();
     dcdc_cla_pwm_update(duty);
 
-    dcdc_cla_zero_crossing_state_machine_service();
-
-    dcdc_cla_rms_calculate();
-
-
-    // Clear EPWM1 interrupt flag so that next interrupt can come in
-    EPWM_clearEventTriggerInterruptFlag(EPWM1_BASE);
 
     dcdc_cla_profiling_pin_clear();
 }
@@ -451,13 +250,9 @@ __attribute__((interrupt)) void dcdc_cla_task_1(void)
 //
 __attribute__((interrupt)) void dcdc_cla_initialization_task(void)
 {
-    dcdc_cla_i_in_raw_filtered = 0.0f;
-    dcdc_cla_v_in_raw_filtered = 0.0f;
-    dcdc_cla_v_bus_raw_filtered = 0.0f;
-
-    dcdc_cla_rms_accumulator_count = 0UL;
-    dcdc_cla_i_in_raw_rms_accumulator = 0.0f;
-    dcdc_cla_v_in_raw_rms_accumulator = 0.0f;
+    dcdc_cla_i_out_raw_filtered = 0.0f;
+    dcdc_cla_v_out_1_raw_filtered = 0.0f;
+    dcdc_cla_v_out_2_raw_filtered = 0.0f;
 
     dcdc_cla_voltage_compensator.x1 = 0.0f;
     dcdc_cla_voltage_compensator.x2 = 0.0f;
@@ -469,15 +264,5 @@ __attribute__((interrupt)) void dcdc_cla_initialization_task(void)
     dcdc_cla_current_compensator.y1 = 0.0f;
     dcdc_cla_current_compensator.y2 = 0.0f;
 
-    dcdc_cla_input_voltage_raw_peak_previous_cycle = 1.0f;
-    dcdc_cla_input_voltage_raw_peak_current = 1.0f;
-
-    dcdc_cla_lf_outputs_force(EPWM_AQ_SW_OUTPUT_LOW, EPWM_AQ_SW_OUTPUT_LOW);
-    dcdc_cla_hf_deadband_set(DCDC_CLA_HF_DEADBAND_SOFT_START_INIT);
-    dcdc_cla_zero_crossing_state = WAITING_FOR_INITIAL_NEGATIVE_ZC;
-
-    dcdc_cla_to_cpu_mem.i_in_raw_rms.cla = 0L;
-    dcdc_cla_to_cpu_mem.v_in_raw_rms.cla = 0L;
-    dcdc_cla_to_cpu_mem.v_bus_raw.cla = 0L;
     dcdc_cla_to_cpu_mem.v_in_raw.cla = 0L;
 }
