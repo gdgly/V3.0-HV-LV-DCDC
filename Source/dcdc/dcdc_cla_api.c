@@ -46,7 +46,7 @@ static void dcdc_cpu_to_cla_struct_init(void)
 
 //
 // This function will
-// - copy over code and const from flash to CLA program and data ram
+// - copy over code and const from flash to CLA program and data RAM
 //   respectively
 // - Initialize the task vectors (MVECTx)
 // - setup each task's trigger
@@ -64,9 +64,9 @@ void dcdc_cla_init(void)
 
 
     // Copy the program and constants from FLASH to RAM before configuring the CLA
-    memcpy((uint32_t*)&Cla1ProgRunStart, (uint32_t*)&Cla1ProgLoadStart,
+    memcpy((uint32_t *)&Cla1ProgRunStart, (uint32_t *)&Cla1ProgLoadStart,
            (uint32_t)&Cla1ProgLoadSize);
-    memcpy((uint32_t*)&Cla1ConstRunStart, (uint32_t*)&Cla1ConstLoadStart,
+    memcpy((uint32_t *)&Cla1ConstRunStart, (uint32_t *)&Cla1ConstLoadStart,
            (uint32_t)&Cla1ConstLoadSize);
 
     // CLA Program will reside in RAMLS0 and RAMLS1
@@ -90,7 +90,7 @@ void dcdc_cla_init(void)
     // Assign the task vectors and set the triggers for task 1 and 8
     CLA_mapTaskVector(CLA1_BASE, CLA_MVECT_1, (uint16_t)&dcdc_cla_task_1);
     CLA_mapTaskVector(CLA1_BASE, CLA_MVECT_8, (uint16_t)&dcdc_cla_initialization_task);
-    CLA_setTriggerSource(CLA_TASK_1, CLA_TRIGGER_EPWM1INT);
+    CLA_setTriggerSource(CLA_TASK_1, CLA_TRIGGER_ADCA1);
     CLA_setTriggerSource(CLA_TASK_8, CLA_TRIGGER_SOFTWARE);
 
 #pragma diag_warning=770

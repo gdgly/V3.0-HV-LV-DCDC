@@ -22,11 +22,7 @@
 #define DCDC_SCI_SERVICE_EXPIRY_uS           (1L * MILLISECONDS_IN_uS)
 #define DCDC_TEMPERATURE_FILTERING_EXPIRY_uS (1L * MILLISECONDS_IN_uS)
 #define DCDC_LED_SERVICE_EXPIRY_uS           (1L * SECONDS_IN_uS)
-#define DCDC_FAN_RPM_SERVICE_EXPIRY_uS       (1L * SECONDS_IN_uS)
 
-
-
-uint32_t fan_rpm;
 
 
 //
@@ -53,8 +49,6 @@ void main(void)
             CPUTimer_getTimerCount(CPUTIMER0_BASE) + DCDC_TEMPERATURE_FILTERING_EXPIRY_uS;
     int32_t led_service_expiry_time_us =
             CPUTimer_getTimerCount(CPUTIMER0_BASE) + DCDC_LED_SERVICE_EXPIRY_uS;
-    int32_t fan_rpm_service_expiry_time_us =
-            CPUTimer_getTimerCount(CPUTIMER0_BASE) + DCDC_FAN_RPM_SERVICE_EXPIRY_uS;
 
     while (1)
     {
@@ -92,15 +86,8 @@ void main(void)
 
         if (IS_CPU_TIME_AFTER(cpu_time_us, led_service_expiry_time_us))
         {
-            GPIO_togglePin(31);
             GPIO_togglePin(34);
             led_service_expiry_time_us += DCDC_LED_SERVICE_EXPIRY_uS;
-        }
-
-        if (IS_CPU_TIME_AFTER(cpu_time_us, fan_rpm_service_expiry_time_us))
-        {
-            fan_rpm = dcdc_fan_rpm_get();
-            fan_rpm_service_expiry_time_us += DCDC_FAN_RPM_SERVICE_EXPIRY_uS;
         }
 
         SysCtl_serviceWatchdog();

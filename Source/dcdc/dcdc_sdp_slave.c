@@ -44,7 +44,6 @@ static uint32_t sdp_ambient_temperature_x100_get(void);
 static uint32_t sdp_dcdc_heatsink_1_temperature_x100_get(void);
 static uint32_t sdp_dcdc_heatsink_2_temperature_x100_get(void);
 static uint32_t sdp_llc_primary_heatsink_temperature_x100_get(void);
-static uint32_t sdp_input_frequency_x10_get(void);
 static uint32_t sdp_fan_speed_get(void);
 static uint32_t sdp_bus_under_voltage_counter_get(void);
 static uint32_t sdp_bus_over_voltage_counter_get(void);
@@ -104,7 +103,6 @@ static const struct sdp_get sdp_get_array[] =
     { 14U, &sdp_dcdc_heatsink_1_temperature_x100_get},
     { 15U, &sdp_dcdc_heatsink_2_temperature_x100_get},
     { 16U, &sdp_llc_primary_heatsink_temperature_x100_get},
-    { 17U, &sdp_input_frequency_x10_get},
     { 18U, &sdp_fan_speed_get},
     { 20U, &sdp_bus_under_voltage_counter_get},
     { 21U, &sdp_bus_over_voltage_counter_get},
@@ -252,15 +250,6 @@ static uint32_t sdp_dcdc_heatsink_2_temperature_x100_get(void)
 static uint32_t sdp_llc_primary_heatsink_temperature_x100_get(void)
 {
     return dcdc_llc_primary_heatsink_temperature_x100_get();
-}
-
-//
-//
-//
-static uint32_t sdp_input_frequency_x10_get(void)
-{
-    uint16_t input_frequency_x10 = (10UL * EPWM1_FREQ) / dcdc_cpu_to_cla_mem.sync_tick_total_per_period.cpu;
-    return input_frequency_x10;
 }
 
 //

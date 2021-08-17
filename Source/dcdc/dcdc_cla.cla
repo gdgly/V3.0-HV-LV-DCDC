@@ -45,7 +45,7 @@
     ((DCDC_CLA_INPUT_VOLTAGE_ZC_THRESHOLD - DCDC_CALIBRATION_V_IN_OFFSET_DEFAULT) / DCDC_CALIBRATION_V_IN_SLOPE_DEFAULT)
 
 #define DCDC_CLA_ZC_DELAY_COUNT_MAX  10UL
-#define DCDC_CLA_HF_DEADBAND_SOFT_START_INIT     ((EPWM1_PERIOD / 2U) + 2UL) // the +2 is to avoid some spurious pulses.
+#define DCDC_CLA_HF_DEADBAND_SOFT_START_INIT     ((EPWM1_PERIOD_MAX / 2U) + 2UL) // the +2 is to avoid some spurious pulses.
 #define DCDC_CLA_HF_DEADBAND_SOFT_START_DELTA    \
     ((DCDC_CLA_HF_DEADBAND_SOFT_START_INIT - EPWM1_DEADBAND) / DCDC_CLA_ZC_DELAY_COUNT_MAX)
 
@@ -96,7 +96,7 @@ static uint32_t dcdc_cla_hf_deadband_soft_start_value;
 //
 static inline void dcdc_cla_profiling_pin_set(void)
 {
-    HWREG(GPIODATA_BASE  + GPIO_O_GPASET) = (1UL << 25);
+    HWREG(GPIODATA_BASE  + GPIO_O_GPASET) = (1UL << 22);
 }
 
 //
@@ -104,7 +104,7 @@ static inline void dcdc_cla_profiling_pin_set(void)
 //
 static inline void dcdc_cla_profiling_pin_clear(void)
 {
-    HWREG(GPIODATA_BASE  + GPIO_O_GPACLEAR) = (1UL << 25);
+    HWREG(GPIODATA_BASE  + GPIO_O_GPACLEAR) = (1UL << 22);
 }
 
 //
@@ -285,7 +285,7 @@ static inline float32_t dcdc_cla_control_execute(void)
 //
 static inline void dcdc_cla_pwm_update(float32_t duty)
 {
-    uint16_t cmpa_value = (uint16_t)((duty * EPWM1_PERIOD) + 0.5f);
+    uint16_t cmpa_value = (uint16_t)((duty * EPWM1_PERIOD_MAX) + 0.5f);
     EPWM_setCounterCompareValue(EPWM1_BASE, EPWM_COUNTER_COMPARE_A, cmpa_value);
     EPWM_setCounterCompareValue(EPWM2_BASE, EPWM_COUNTER_COMPARE_A, cmpa_value);
 }

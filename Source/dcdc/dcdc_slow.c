@@ -37,11 +37,6 @@
 #define DCDC_HEATSINK_TEMPERATURE_OTP_x100_CUTOFF    (100 * 100)
 #define DCDC_HEATSINK_TEMPERATURE_OTP_x100_QUALIFY   ( 90 * 100)
 
-#define DCDC_LINE_CYCLE_PERIOD_IN_TICKS_HIGH_CUTOFF  (EPWM1_FREQ / 47U)
-#define DCDC_LINE_CYCLE_PERIOD_IN_TICKS_HIGH_QUALIFY (EPWM1_FREQ / 48U)
-#define DCDC_LINE_CYCLE_PERIOD_IN_TICKS_LOW_QUALIFY  (EPWM1_FREQ / 62U)
-#define DCDC_LINE_CYCLE_PERIOD_IN_TICKS_LOW_CUTOFF   (EPWM1_FREQ / 63U)
-
 #define DCDC_INPUT_VOLTAGE_UVP_CUTOFF_RMS         90.0f
 #define DCDC_INPUT_VOLTAGE_UVP_QUALIFY_RMS       100.0f
 
@@ -82,7 +77,6 @@ static bool dcdc_ambient_over_temperature;
 static bool dcdc_heatsink_1_over_temperature;
 static bool dcdc_heatsink_2_over_temperature;
 static bool dcdc_llc_primary_heatsink_over_temperature;
-static bool dcdc_input_frequency_out_of_range;
 static bool dcdc_input_voltage_rms_under_voltage;
 static bool dcdc_input_voltage_rms_over_voltage;
 
@@ -363,27 +357,6 @@ static bool dcdc_llc_primary_heatsink_over_termperature_evaluate(void)
 //
 //
 //
-static bool dcdc_input_frequency_out_of_range_evaluate(void)
-{
-    if ((dcdc_cpu_to_cla_mem.sync_tick_total_per_period.cpu > DCDC_LINE_CYCLE_PERIOD_IN_TICKS_HIGH_CUTOFF)
-            || (dcdc_cpu_to_cla_mem.sync_tick_total_per_period.cpu < DCDC_LINE_CYCLE_PERIOD_IN_TICKS_LOW_CUTOFF))
-    {
-        ++dcdc_input_frequency_out_of_range_counter;
-        dcdc_input_frequency_out_of_range = true;
-    }
-    else if ((dcdc_cpu_to_cla_mem.sync_tick_total_per_period.cpu > DCDC_LINE_CYCLE_PERIOD_IN_TICKS_LOW_QUALIFY)
-            && (dcdc_cpu_to_cla_mem.sync_tick_total_per_period.cpu < DCDC_LINE_CYCLE_PERIOD_IN_TICKS_HIGH_QUALIFY))
-
-    {
-        dcdc_input_frequency_out_of_range = false;
-    }
-
-    return dcdc_input_frequency_out_of_range;
-}
-
-//
-//
-//
 static bool dcdc_input_voltage_rms_under_voltage_evaluate(void)
 {
     uint16_t v_in_raw_rms = dcdc_cla_to_cpu_mem.v_in_raw_rms.cpu;
@@ -434,7 +407,6 @@ static void dcdc_faults_service(void)
     non_critical_faults_active |= dcdc_llc_primary_heatsink_over_termperature_evaluate();
     dcdc_non_critical_faults_active = non_critical_faults_active;
 
-    critical_faults_active |= dcdc_input_frequency_out_of_range_evaluate();
     critical_faults_active |= dcdc_input_voltage_rms_under_voltage_evaluate();
     critical_faults_active |= dcdc_input_voltage_rms_over_voltage_evaluate();
     dcdc_critical_faults_active = critical_faults_active;
@@ -497,8 +469,7 @@ static void dcdc_waiting_for_input_voltage_qualification_state_service(void)
     uint16_t v_in_raw_rms = dcdc_cla_to_cpu_mem.v_in_raw_rms.cpu;
     // TODO: If v_bus and v_in don't have equivalent signal conditioning, calibrate
 
-    if ((!dcdc_input_frequency_out_of_range)
-            && (!dcdc_input_voltage_rms_under_voltage)
+    if ((!dcdc_input_voltage_rms_under_voltage)
             && (v_bus_raw > (uint16_t)((float32_t)v_in_raw_rms * (SQRT_2 * 0.75f))))
     {
         dcdc_input_relay_close();
@@ -599,7 +570,6 @@ void dcdc_slow_init(void)
     dcdc_heatsink_1_over_temperature = false;
     dcdc_heatsink_2_over_temperature = false;
     dcdc_llc_primary_heatsink_over_temperature = false;
-    dcdc_input_frequency_out_of_range = false;
     dcdc_input_voltage_rms_under_voltage = false;
     dcdc_input_voltage_rms_over_voltage = false;
 
