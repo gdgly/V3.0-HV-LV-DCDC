@@ -1,0 +1,221 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "F28004x" --package "F28004x_100PZ" --part "F28004x_100PZ" --product "C2000WARE@3.00.00.00"
+ * @versions {"data":"2021031521","timestamp":"2021031521","tool":"1.8.0+1863","templates":null}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const aio    = scripting.addModule("/driverlib/aio.js", {}, false);
+const aio1   = aio.addInstance();
+const aio2   = aio.addInstance();
+const aio3   = aio.addInstance();
+const aio4   = aio.addInstance();
+const aio5   = aio.addInstance();
+const aio6   = aio.addInstance();
+const aio7   = aio.addInstance();
+const aio8   = aio.addInstance();
+const aio9   = aio.addInstance();
+const aio10  = aio.addInstance();
+const aio11  = aio.addInstance();
+const aio12  = aio.addInstance();
+const aio13  = aio.addInstance();
+const aio14  = aio.addInstance();
+const can    = scripting.addModule("/driverlib/can.js", {}, false);
+const can1   = can.addInstance();
+const epwm   = scripting.addModule("/driverlib/epwm.js", {}, false);
+const epwm1  = epwm.addInstance();
+const epwm2  = epwm.addInstance();
+const epwm3  = epwm.addInstance();
+const epwm4  = epwm.addInstance();
+const epwm5  = epwm.addInstance();
+const eqep   = scripting.addModule("/driverlib/eqep.js", {}, false);
+const eqep1  = eqep.addInstance();
+const gpio   = scripting.addModule("/driverlib/gpio.js", {}, false);
+const gpio1  = gpio.addInstance();
+const gpio2  = gpio.addInstance();
+const gpio3  = gpio.addInstance();
+const gpio4  = gpio.addInstance();
+const gpio5  = gpio.addInstance();
+const gpio6  = gpio.addInstance();
+const gpio7  = gpio.addInstance();
+const gpio8  = gpio.addInstance();
+const gpio9  = gpio.addInstance();
+const gpio10 = gpio.addInstance();
+const gpio11 = gpio.addInstance();
+const other  = scripting.addModule("/driverlib/other.js", {}, false);
+const other1 = other.addInstance();
+const sci    = scripting.addModule("/driverlib/sci.js", {}, false);
+const sci1   = sci.addInstance();
+const spi    = scripting.addModule("/driverlib/spi.js", {}, false);
+const spi1   = spi.addInstance();
+const spi2   = spi.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+aio1.$name                  = "ADC1";
+aio1.aioPin.$assign         = "AIO231";
+aio1.aioPin["AIO#"].$assign = "A0/B15/C15/DACA_OUT";
+
+aio2.$name                  = "ADC2";
+aio2.aioPin.$assign         = "AIO241";
+aio2.aioPin["AIO#"].$assign = "B0";
+
+aio3.$name                  = "ADC3";
+aio3.aioPin.$assign         = "AIO232";
+aio3.aioPin["AIO#"].$assign = "A1/DACB_OUT";
+
+aio4.$name                  = "ADC4";
+aio4.aioPin.$assign         = "AIO230";
+aio4.aioPin["AIO#"].$assign = "A10/B1/C10/PGA7_OF";
+
+aio5.$name                  = "ADC5";
+aio5.aioPin.$assign         = "AIO237";
+aio5.aioPin["AIO#"].$assign = "C0";
+
+aio6.$name                  = "ADC_heavy_filter_1";
+aio6.aioPin.$assign         = "AIO233";
+aio6.aioPin["AIO#"].$assign = "A3";
+
+aio7.$name                  = "ADC_heavy_filter_2";
+aio7.aioPin.$assign         = "AIO226";
+aio7.aioPin["AIO#"].$assign = "B2/C6/PGA3_OF";
+
+aio8.$name                  = "ADC_heavy_filter_3";
+aio8.aioPin.$assign         = "AIO238";
+aio8.aioPin["AIO#"].$assign = "C1";
+
+aio9.$name                  = "ADC_heavy_filter_4";
+aio9.aioPin.$assign         = "AIO244";
+aio9.aioPin["AIO#"].$assign = "C2";
+
+aio10.$name                  = "ADC_heavy_filter_5";
+aio10.aioPin.$assign         = "AIO245";
+aio10.aioPin["AIO#"].$assign = "C3, PGA4_IN";
+
+aio11.$name                  = "ADC_light_filter_1";
+aio11.aioPin.$assign         = "AIO224";
+aio11.aioPin["AIO#"].$assign = "A2/B6/PGA1_OF";
+
+aio12.$name                  = "ADC_light_filter_2";
+aio12.aioPin.$assign         = "AIO225";
+aio12.aioPin["AIO#"].$assign = "A4/B8/PGA2_OF";
+
+aio13.$name                  = "HW_ID";
+aio13.aioPin.$assign         = "AIO242";
+aio13.aioPin["AIO#"].$assign = "B3/VDAC";
+
+aio14.$name                  = "ADC_v_ref";
+aio14.aioPin.$assign         = "AIO239";
+aio14.aioPin["AIO#"].$assign = "C4";
+
+can1.$name                 = "myCAN0";
+can1.msgObjs               = 1;
+can1.can.$assign           = "CANB";
+can1.can.can_rxPin.$assign = "GPIO59";
+can1.can.can_txPin.$assign = "GPIO58";
+can1.msgObj1.$name         = "msgObj0";
+
+epwm1.$name                  = "PWM1";
+epwm1.epwm.$assign           = "EPWM1";
+epwm1.epwm.epwm_aPin.$assign = "GPIO0";
+epwm1.epwm.epwm_bPin.$assign = "GPIO1";
+
+epwm2.$name                  = "PWM2";
+epwm2.epwm.$assign           = "EPWM2";
+epwm2.epwm.epwm_aPin.$assign = "GPIO2";
+epwm2.epwm.epwm_bPin.$assign = "GPIO3";
+
+epwm3.$name                  = "PWM3";
+epwm3.epwm.$assign           = "EPWM3";
+epwm3.epwm.epwm_aPin.$assign = "GPIO4";
+epwm3.epwm.epwm_bPin.$assign = "GPIO5";
+
+epwm4.$name                  = "PWM4";
+epwm4.useInterfacePins       = ["EPWM#_A"];
+epwm4.epwm.$assign           = "EPWM4";
+epwm4.epwm.epwm_aPin.$assign = "GPIO6";
+epwm4.epwm.epwm_bPin.$assign = "GPIO7";
+
+epwm5.useInterfacePins       = ["EPWM#_A"];
+epwm5.useCase                = "CUSTOM";
+epwm5.$name                  = "AuxPWR_PWM";
+epwm5.epwm.$assign           = "EPWM5";
+epwm5.epwm.epwm_aPin.$assign = "GPIO16";
+
+eqep1.$name                  = "Fan_RPM";
+eqep1.useCase                = "CUSTOM";
+eqep1.useInterfacePins       = ["EQEP#_A"];
+eqep1.eqep.$assign           = "EQEP1";
+eqep1.eqep.eqep_aPin.$assign = "GPIO56";
+
+gpio1.$name           = "PWM_enable";
+gpio1.gpioPin.$assign = "GPIO13";
+
+gpio2.$name           = "Relay";
+gpio2.gpioPin.$assign = "GPIO12";
+
+gpio3.$name           = "Primary_fault";
+gpio3.gpioPin.$assign = "GPIO17";
+
+gpio4.$name           = "CLA_debug";
+gpio4.gpioPin.$assign = "GPIO25";
+
+gpio5.$name           = "LED_AC_OK_Interlock";
+gpio5.gpioPin.$assign = "GPIO26";
+
+gpio6.$name           = "LED_DC_OK_Dummy_load";
+gpio6.gpioPin.$assign = "GPIO31";
+
+gpio7.$name           = "LED_fault";
+gpio7.gpioPin.$assign = "GPIO34";
+
+gpio8.$name           = "Boot_pin_pull_up_1";
+gpio8.gpioPin.$assign = "GPIO24";
+
+gpio9.$name           = "Boot_pin_pull_up_2";
+gpio9.gpioPin.$assign = "GPIO32";
+
+gpio10.$name           = "PhaseSyncGPIO";
+gpio10.gpioPin.$assign = "GPIO57";
+
+gpio11.$name           = "CPU_Debug";
+gpio11.gpioPin.$assign = "GPIO33";
+
+other1.useCase              = "CUSTOM";
+other1.$name                = "JTAG";
+other1.useInterfacePins     = ["TDI","TDO","X2"];
+other1.other.$assign        = "OTHER";
+other1.other.tdoPin.$assign = "GPIO37/TDO";
+other1.other.tdiPin.$assign = "GPIO35/TDI";
+other1.other.x2Pin.$assign  = "GPIO18_X2";
+
+sci1.useInterrupts         = false;
+sci1.baudRates             = 9600;
+sci1.$name                 = "SCI_comms";
+sci1.sci.$assign           = "SCIA";
+sci1.sci.sci_rxPin.$assign = "GPIO28";
+sci1.sci.sci_txPin.$assign = "GPIO29";
+
+spi1.mode                    = "SPI_MODE_MASTER";
+spi1.emulationMode           = "SPI_EMULATION_FREE_RUN";
+spi1.useInterrupts           = false;
+spi1.$name                   = "SPI_flash";
+spi1.spi.$assign             = "SPIA";
+spi1.spi.spi_simoPin.$assign = "GPIO8";
+spi1.spi.spi_somiPin.$assign = "GPIO10";
+spi1.spi.spi_clkPin.$assign  = "GPIO9";
+spi1.spi.spi_stePin.$assign  = "GPIO11";
+
+spi2.useInterrupts           = false;
+spi2.mode                    = "SPI_MODE_MASTER";
+spi2.emulationMode           = "SPI_EMULATION_FREE_RUN";
+spi2.useCase                 = "3-WIRE MASTER";
+spi2.$name                   = "SPI_DAC";
+spi2.spi.$assign             = "SPIB";
+spi2.spi.spi_simoPin.$assign = "GPIO30";
+spi2.spi.spi_clkPin.$assign  = "GPIO14";
+spi2.spi.spi_stePin.$assign  = "GPIO15";

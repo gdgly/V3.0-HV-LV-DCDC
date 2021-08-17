@@ -1,0 +1,80 @@
+plantuml
+@startuml
+hide empty description
+
+skinparam state {
+    StartColor PaleGreen
+    EndColor Red
+    BackgroundColor Gold
+    BackgroundColor<<Junction>> GreenYellow  
+    BorderColor Gray
+    FontName Consolas
+}
+
+
+state "Open Loop Operation" as OpenLoop
+Shutdown -left-> OpenLoop: Open Loop Command
+OpenLoop -left-> Shutdown: Fault (except Input UVP)\n/ [Turn off PWMs,\nOpen Inrush Relay]
+
+note bottom of OpenLoop
+	Primary and SR PWM operation can be enabled/disabled,
+	as well as the Inrush Relay.
+	The PWMs duty cycle can be adjusted.
+end note
+
+
+state "Main Operation" as MainOperation {
+	state "Waiting for Input\nVoltage Qualification" as InputQualification
+	state "Waiting for Critical\nFaults to Clear" as CriticalFaults
+			
+	[*] -right-> InputQualification : [Turn off PWMs,\nOpen Inrush Relay]
+			
+	state "Input Qualified" as InputQualified {
+
+		state "Waiting for Non-Critical\nFaults to Clear" as StandBy
+		state "Waiting for Inrush\nRelay to Close\nDelay To Expire" as RelayClose
+
+		
+		Shutdown -down-> InputQualification : Master Startup   
+
+		InputQualification -down-> RelayClose : Input Voltage Qualified\n/ [Close Inrush Relay]
+		RelayClose -down-> StandBy : Delay Expired
+		
+		state "Running States" as RunningStates {
+			state "Waiting for Soft\nStart to Finish" as SoftStart
+			state "Normal Operation" as Normal
+			
+			StandBy -down-> SoftStart : No Faults Active \n/[Turn on PWMs]
+			SoftStart -down-> Normal : Soft Start Finished
+		}
+		
+		note bottom of RunningStates : TODO: Separate SR state machine? \nNeed to define SR scheme
+		
+		RunningStates -up-> StandBy : Non-Critical Faults\n/[Turn off PWMs]
+	}
+
+
+	CriticalFaults -left-> InputQualification : No Critical Faults Active
+
+	InputQualified -left-> CriticalFaults : Critical Faults \n/ [Turn off PWMs,\nOpen Inrush Relay]
+
+	note right of CriticalFaults : TODO: Do we need a delay here? \nDefine which faults are critical
+}
+
+MainOperation -up-> Shutdown : Master Shutdown / [Turn off PWMs,\nOpen Inrush Relay]
+
+
+note as N1
+	Critical Faults:
+	- Input UVP
+	- Interlock Fault
+	
+	Non-Critical Faults:
+	- Input OCP
+	- Bus OVP
+	- Input OVP
+	- LLC Primary Heatsink 1 OTP
+	- LLC Primary Heatsink 2 OTP
+end note
+
+@enduml

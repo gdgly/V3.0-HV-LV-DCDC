@@ -1,0 +1,49 @@
+plantuml
+@startuml
+hide empty description
+
+skinparam state {
+    StartColor PaleGreen
+    EndColor Red
+    BackgroundColor Gold
+    BackgroundColor<<Junction>> GreenYellow  
+    BorderColor Gray
+    FontName Consolas
+}
+
+
+state "Negative \nZero-Crossing 1" as NegativeZC_1
+state "Negative \nZero-Crossing 2" as NegativeZC_2
+state "Negative Half" as NegativeHalf
+state "Positive \nZero-Crossing 1" as PositiveZC_1
+state "Positive \nZero-Crossing 2" as PositiveZC_2
+state "Positive Half" as PositiveHalf
+state "Waiting for Initial\n Negative Zero-Crossing" as InitialZC
+
+[*] --> InitialZC : [LFA Low\nLFB Low,\nHF DB = PRD/2]
+InitialZC -down-> NegativeZC_1 : v_AC < v_AC_th
+PositiveHalf -right-> NegativeZC_1 : v_AC < v_AC_th\n/ [LFA Low,\nLFB Low,\nHF DB = PRD/2]
+NegativeZC_1 -right-> NegativeZC_2 : v_AC < -v_AC_th
+NegativeZC_2 : HF DB soft start
+NegativeZC_2 -down-> NegativeHalf : 10 switching cycles\n/ [LFA High,\nLFB Low,\nHF DB = 100ns]
+NegativeHalf -left-> PositiveZC_1 : v_AC > -v_AC_th\n/ [LFA Low,\nLFB Low,\nHF DB = PRD/2]
+PositiveZC_1 -left-> PositiveZC_2 : v_AC > v_AC_th
+PositiveZC_2 : HF DB soft start
+PositiveZC_2 -up-> PositiveHalf : 10 switching cycles\n/ [LFA Low,\nLFB High,\nHF DB = 100ns]
+
+
+
+
+
+note as N1
+	This state machine is executed 
+	at switching frequency (70kHz)
+end note
+
+note bottom of PositiveZC_2
+	HF DB soft start reduces the deadband 
+	(both rising and falling edge)
+	from PRD/2 to 100ns in 10 steps
+end note
+
+@enduml

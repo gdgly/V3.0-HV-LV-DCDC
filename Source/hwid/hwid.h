@@ -1,0 +1,17 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// HW ID package include file
+// Assuming a 10kOhm pull up resistor.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef HWID_H_
+#define HWID_H_
+
+
+#define HWID_INVALID    -1
+#define HWID_MAX        20
+
+extern int16_t hwid_get(uint16_t raw_value);
+
+#endif

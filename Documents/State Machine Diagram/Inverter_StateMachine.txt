@@ -1,0 +1,81 @@
+plantuml
+@startuml
+hide empty description
+
+skinparam state {
+    StartColor PaleGreen
+    EndColor Red
+    BackgroundColor Gold
+    BackgroundColor<<Junction>> GreenYellow  
+    BorderColor Gray
+    FontName Consolas
+}
+
+
+state "Open Loop Operation" as OpenLoop
+Shutdown -left-> OpenLoop: Open Loop Command
+OpenLoop -left-> Shutdown: Fault (except Bus UVP)\n/ [Turn off PWMs, Open Output Relay]
+
+note bottom of OpenLoop
+	PWM operation can be enabled/disabled,
+	as well as the output relay. The PWMs
+	duty cycle can be adjusted.
+end note
+
+
+state "Main Operation" as MainOperation {
+	state "Waiting for Input\nVoltage Qualification" as InputQualification
+	state "Waiting for Critical\nFaults to Clear" as CriticalFaults
+			
+	[*] -right-> InputQualification : [Turn off PWMs,\nOpen Output Relay]
+			
+	state "Input Qualified" as InputQualified {
+
+		state "Waiting for Non-Critical\nFaults to Clear" as StandBy
+		state "Waiting for Output\nRelay to Close\nDelay To Expire" as RelayClose
+		
+		Shutdown -down-> InputQualification : Master Startup   
+    
+		InputQualification -down-> StandBy : Input Voltage Qualified
+		StandBy -down-> RelayClose : No Faults Active\n/ [Close Output Relay]
+
+		
+		state "Running States" as RunningStates {
+			state "Waiting for Soft\nStart to Finish" as SoftStart
+			state "Normal Operation" as Normal
+			
+			RelayClose -down-> SoftStart : Delay Expired\nAND Zero-Crossing\n/[Turn on PWMs]
+			SoftStart -down-> Normal : Soft Start Finished
+		}
+		
+		RunningStates -up-> StandBy : Non-Critical Faults\n/[Turn off PWMs]
+	}
+
+
+	CriticalFaults -left-> InputQualification : No Critical Faults Active
+
+	InputQualified -left-> CriticalFaults : Critical Faults \n/ [Turn off PWMs, \nOpen Output Relay]
+
+	note right of CriticalFaults : TODO: Do we need a delay here?
+}
+
+MainOperation -up-> Shutdown : Master Shutdown\n / [Turn off PWMs,\nOpen Output Relay]
+
+
+note as N1
+	Critical Faults:
+	- Bus UVP
+	- Bus OVP
+	- Ambient OTP
+	- Inverter Heatsink 1 OTP
+	- Inverter Heatsink 2 OTP
+	- LLC Secondary Heatsink 1 OTP
+	- LLC Secondary Heatsink 2 OTP
+	Non-Critical Faults:
+	- Instantaneous Output OVP
+	- Instantaneous Output OCP
+	- RMS Output OVP
+	- RMS Output OCP
+end note
+
+@enduml

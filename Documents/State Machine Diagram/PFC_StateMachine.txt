@@ -1,0 +1,84 @@
+plantuml
+@startuml
+hide empty description
+
+skinparam state {
+    StartColor PaleGreen
+    EndColor Red
+    BackgroundColor Gold
+    BackgroundColor<<Junction>> GreenYellow  
+    BorderColor Gray
+    FontName Consolas
+}
+
+
+state "Open Loop Operation" as OpenLoop
+Shutdown -left-> OpenLoop: Open Loop Command
+OpenLoop -left-> Shutdown: Fault (except Input UVP and\nInput Frequency Out of Range)\n/ [Turn off PWMs, Open Inrush Relay]
+
+note bottom of OpenLoop
+	PWM operation can be enabled/disabled,
+	as well as the input relay. The PWMs
+	duty cycle can be adjusted.
+end note
+
+
+state "Main Operation" as MainOperation {
+	state "Waiting for Input\nVoltage Qualification" as InputQualification
+	state "Waiting for Critical\nFaults to Clear" as CriticalFaults
+			
+	[*] -right-> InputQualification : [Turn off PWMs,\nOpen Inrush Relay]
+			
+	state "Input Qualified" as InputQualified {
+
+		state "Waiting for Inrush\nRelay to Close\nDelay To Expire" as RelayClose
+		state "Waiting for Non-Critical\nFaults to Clear" as StandBy
+
+		
+		Shutdown -down-> InputQualification : Master Startup   
+    
+		InputQualification -down-> RelayClose : Input Voltage Qualified \n/ [Close Inrush Relay]
+		RelayClose -down-> StandBy : Delay Expired
+		
+		state "Running States" as RunningStates {
+			state "Waiting for Soft\nStart to Finish" as SoftStart
+			state "Normal Operation" as Normal
+			
+			StandBy -down-> SoftStart : No Faults Active \n/[Turn on PWMs]
+			SoftStart -down-> Normal : Soft Start Finished
+		}
+		
+		RunningStates -up-> StandBy : Non-Critical Faults\n/[Turn off PWMs]
+	}
+
+
+	CriticalFaults -left-> InputQualification : No Critical Faults Active
+
+	InputQualified -left-> CriticalFaults : Critical Faults \n/ [Turn off PWMs, \nOpen Inrush Relay]
+
+	note right of CriticalFaults : TODO: Do we need a delay here?
+}
+
+MainOperation -up-> Shutdown : Master Shutdown\n / [Turn off PWMs,\nOpen Inrush Relay]
+
+
+note as N1
+	Critical Faults:
+	- RMS Input UVP
+	- RMS Input OVP
+	- Input Frequency Out of Range
+	
+	Non-Critical Faults:
+	- Bus Voltage OVP
+	- Instantaneous Input OCP
+	- RMS Input OCP
+	- Ambient OTP
+	- PFC Heatsink 1 OTP
+	- PFC Heatsink 2 OTP
+	- LLC Primary Heatsink OTP
+	
+	Faults for DCDC:
+	- Bus Voltage UVP
+end note
+
+@enduml

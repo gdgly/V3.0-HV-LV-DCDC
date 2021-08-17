@@ -1,0 +1,80 @@
+plantuml
+@startuml
+hide empty description
+
+skinparam state {
+    StartColor PaleGreen
+    EndColor Red
+    BackgroundColor Gold
+    BackgroundColor<<Junction>> GreenYellow  
+    BorderColor Gray
+    FontName Consolas
+}
+
+
+state "Open Loop Operation" as OpenLoop
+Shutdown -left-> OpenLoop: Open Loop Command
+OpenLoop -left-> Shutdown: Fault / [Turn off PWMs,\nDisable OR-ing FET,\nDisable Active Dummy Load]
+
+note bottom of OpenLoop
+	Primary and SR PWM operation can be enabled/disabled,
+	as well as the OR-ing FET and the Active Dummy Load.
+	The PWMs duty cycle can be adjusted.
+end note
+
+
+state "Main Operation" as MainOperation {
+	state "Waiting for Faults\nfrom PFC to clear" as InputQualification
+	state "Waiting for Critical\nFaults to Clear" as CriticalFaults
+			
+	[*] -right-> InputQualification : [Turn off PWMs,\nDisable OR-ing FET,\nDisable Active Dummy Load]
+			
+	state "Input Qualified" as InputQualified {
+
+		state "Waiting for Non-Critical\nFaults to Clear" as StandBy
+
+		
+		Shutdown -down-> InputQualification : Master Startup   
+
+		InputQualification -down-> StandBy : No Faults from PFC
+		
+		state "Running States" as RunningStates {
+			state "Waiting for Soft\nStart to Finish" as SoftStart
+			state "Normal Operation" as Normal
+			state "Light-Load Operation" as LightLoad
+			
+			StandBy -down-> SoftStart : No Faults Active \n/[Turn on PWMs]
+			SoftStart -down-> Normal : Soft Start Finished
+			Normal -down-> LightLoad: Output Current < xxA \n/ [Enable Active \nDummy Load]
+			LightLoad -up-> Normal: Output Current > yyA \n/ [Disable Active \nDummy Load]
+		}
+		
+		note bottom of RunningStates : TODO: Separate SR state machine? \nNeed to define SR scheme \n Do we need a negative current state to control OR-ing FET?\n Or is it just a real-time protection?
+		
+		RunningStates -up-> StandBy : Non-Critical Faults\n/[Turn off PWMs,\nDisable Active Dummy Load]
+	}
+
+
+	CriticalFaults -left-> InputQualification : No Critical Faults Active
+
+	InputQualified -left-> CriticalFaults : Critical Faults \n/ [Turn off PWMs,\nDisable OR-ing FET,\nDisable Active Dummy Load]
+
+	note right of CriticalFaults : TODO: Do we need a delay here? \nDefine which faults are critical
+}
+
+MainOperation -up-> Shutdown : Master Shutdown / [Turn off PWMs,\nDisable OR-ing FET,\nDisable Active Dummy Load]
+
+
+note as N1
+	Critical Faults:
+	- Interlock Fault
+	- Fault from PFC
+
+	Non-Critical Faults:
+	- Output OVP
+	- Output OCP
+	- LLC Secondary Heatsink 1 OTP
+	- LLC Secondary Heatsink 2 OTP
+end note
+
+@enduml
