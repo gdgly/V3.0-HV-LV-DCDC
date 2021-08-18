@@ -51,6 +51,16 @@
 			<locationURI>SOURCE_LOC/driverlib/cla.c</locationURI>
 		</link>
 		<link>
+			<name>Source/clb.c</name>
+			<type>1</type>
+			<locationURI>SOURCE_LOC/driverlib/clb.c</locationURI>
+		</link>
+		<link>
+			<name>Source/clb_config.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/Source/clb_sr/clb_config.c</locationURI>
+		</link>
+		<link>
 			<name>Source/cmpss.c</name>
 			<type>1</type>
 			<locationURI>SOURCE_LOC/driverlib/cmpss.c</locationURI>

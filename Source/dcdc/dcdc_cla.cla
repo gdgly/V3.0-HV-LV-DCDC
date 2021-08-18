@@ -62,7 +62,7 @@ static struct dcdc_cla_2p2z dcdc_cla_current_compensator;
 //
 static inline void dcdc_cla_profiling_pin_set(void)
 {
-    HWREG(GPIODATA_BASE  + GPIO_O_GPASET) = (1UL << 22);
+    HWREG(GPIODATA_BASE  + GPIO_O_GPASET) = (1UL << 3);
 }
 
 //
@@ -70,7 +70,7 @@ static inline void dcdc_cla_profiling_pin_set(void)
 //
 static inline void dcdc_cla_profiling_pin_clear(void)
 {
-    HWREG(GPIODATA_BASE  + GPIO_O_GPACLEAR) = (1UL << 22);
+    HWREG(GPIODATA_BASE  + GPIO_O_GPACLEAR) = (1UL << 3);
 }
 
 //

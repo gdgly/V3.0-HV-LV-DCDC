@@ -28,8 +28,8 @@
 //
 static inline void dcdc_isr_profiling_pin_set(void)
 {
-    // GPIO 33 is bit 1 of GPBDAT
-    HWREG(GPIODATA_BASE  + GPIO_O_GPBSET) = (1UL << 1);
+    // GPIO34 is bit 2 of GPBDAT
+    HWREG(GPIODATA_BASE  + GPIO_O_GPBSET) = (1UL << 2);
 }
 
 //
@@ -37,8 +37,8 @@ static inline void dcdc_isr_profiling_pin_set(void)
 //
 static inline void dcdc_isr_profiling_pin_clear(void)
 {
-    // GPIO 33 is bit 1 of GPBDAT
-    HWREG(GPIODATA_BASE  + GPIO_O_GPBCLEAR) = (1UL << 1);
+    // GPIO34 is bit 2 of GPBDAT
+    HWREG(GPIODATA_BASE  + GPIO_O_GPBCLEAR) = (1UL << 2);
 }
 
 //
