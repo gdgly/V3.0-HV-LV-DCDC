@@ -84,6 +84,7 @@ static inline void dcdc_cla_adc_filter(void)
     temp = i_out_raw * DCDC_LPF_ALPHA_OUTPUT_CURRENT;
     temp += (dcdc_cla_i_out_raw_filtered * (1.0f - DCDC_LPF_ALPHA_OUTPUT_CURRENT));
     dcdc_cla_i_out_raw_filtered = temp;
+    dcdc_cla_to_cpu_mem.i_out_raw_filtered.cla = (uint32_t)temp;
 
     float32_t v_out_1_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1;
     temp = v_out_1_raw * DCDC_LPF_ALPHA_OUTPUT_VOLTAGE;

@@ -26,8 +26,6 @@
 
 #define DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD    5
 
-#define DCDC_OUTPUT_CURRENT_REVERSE_DEFAULT_CALIBRATION_CALCULATE(i)    (uint16_t)(((i) \
-        - DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT) / DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
 #define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF     5.0f
 #define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF_RAW \
     DCDC_OUTPUT_CURRENT_REVERSE_DEFAULT_CALIBRATION_CALCULATE(DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF)
@@ -42,7 +40,6 @@ static bool dcdc_open_loop_enable;
 static bool dcdc_open_loop_primary_enable;
 static bool dcdc_open_loop_sr_enable;
 static bool dcdc_open_loop_active_dummy_load_enable;
-static bool dcdc_open_loop_oring_fet_enable;
 
 static int16_t dcdc_llc_secondary_heatsink_1_temperature_x100;
 static int16_t dcdc_llc_secondary_heatsink_2_temperature_x100;
@@ -122,22 +119,6 @@ static void dcdc_active_dummy_load_disable(void)
 //
 //
 //
-static void dcdc_oring_fet_enable(void)
-{
-    GPIO_writePin(12, 1);
-}
-
-//
-//
-//
-static void dcdc_oring_fet_disable(void)
-{
-    GPIO_writePin(12, 0);
-}
-
-//
-//
-//
 static uint32_t dcdc_pfc_fault_signal_status_get(void)
 {
     return GPIO_readPin(17);
@@ -161,12 +142,10 @@ static void dcdc_shutdown_command_service(void)
         dcdc_pwm_primary_disable_and_lock();
         dcdc_pwm_sr_disable();
         dcdc_active_dummy_load_disable();
-        dcdc_oring_fet_disable();
         dcdc_open_loop_enable = false;
         dcdc_open_loop_primary_enable = false;
         dcdc_open_loop_sr_enable = false;
         dcdc_open_loop_active_dummy_load_enable = false;
-        dcdc_open_loop_oring_fet_enable = false;
         dcdc_cpu_to_cla_mem.open_loop_primary_period.cpu = EPWM1_PERIOD_MIN;
         dcdc_cpu_to_cla_mem.dcdc_state.cpu = DCDC_STATE_SHUTDOWN;
     }
@@ -185,8 +164,6 @@ static void dcdc_fault_shutdown_service(void)
             dcdc_pwm_primary_disable_and_lock();
             dcdc_pwm_sr_disable();
             dcdc_active_dummy_load_disable();
-            // TODO: Decouple ORing FET from state machine
-            dcdc_oring_fet_disable();
             dcdc_cpu_to_cla_mem.dcdc_state.cpu =
                     DCDC_STATE_WAITING_FOR_CRITICAL_FAULTS_TO_CLEAR;
         }
@@ -199,7 +176,6 @@ static void dcdc_fault_shutdown_service(void)
             dcdc_pwm_primary_disable_and_lock();
             dcdc_pwm_sr_disable();
             dcdc_active_dummy_load_disable();
-            dcdc_oring_fet_disable();
             dcdc_cpu_to_cla_mem.dcdc_state.cpu =
                     DCDC_STATE_WAITING_FOR_NON_CRITICAL_FAULTS_TO_CLEAR;
         }
@@ -257,8 +233,7 @@ static bool dcdc_output_over_current_evaluate(void)
 // TODO: Remove this? Is it necessary?
 static bool dcdc_output_current_sw_over_current_evaluate(void)
 {
-    // TODO: Use filtered signal from CLA?
-    uint16_t i_out_raw = DCDC_ADC_RESULT_OUTPUT_CURRENT;
+    uint16_t i_out_raw = dcdc_cla_to_cpu_mem.i_out_raw_filtered.cpu;
     if (i_out_raw > dcdc_output_current_ocp_cutoff_raw)
     {
         ++dcdc_output_current_sw_over_current_counter;
@@ -376,11 +351,6 @@ static void dcdc_open_loop_state_service(void)
     else
         dcdc_active_dummy_load_disable();
 
-    if (dcdc_open_loop_oring_fet_enable)
-        dcdc_oring_fet_enable();
-    else
-        dcdc_oring_fet_disable();
-
 
     // TODO: Determine which are open loop faults
     if (dcdc_non_critical_faults_active)
@@ -437,8 +407,7 @@ static void dcdc_waiting_for_soft_start_to_finish_state_service(void)
 //
 static void dcdc_normal_operation_service(void)
 {
-    // TODO: Use filtered signal from CLA
-    if (DCDC_ADC_RESULT_OUTPUT_CURRENT
+    if (dcdc_cla_to_cpu_mem.i_out_raw_filtered.cpu
             < DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_QUALIFY_RAW)
     {
         dcdc_active_dummy_load_enable();
@@ -451,8 +420,7 @@ static void dcdc_normal_operation_service(void)
 //
 static void dcdc_light_load_operation_service(void)
 {
-    // TODO: Use filtered signal from CLA
-    if (DCDC_ADC_RESULT_OUTPUT_CURRENT
+    if (dcdc_cla_to_cpu_mem.i_out_raw_filtered.cpu
             > DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF_RAW)
     {
         dcdc_active_dummy_load_disable();
@@ -503,7 +471,6 @@ void dcdc_slow_init(void)
     dcdc_open_loop_primary_enable = false;
     dcdc_open_loop_sr_enable = false;
     dcdc_open_loop_active_dummy_load_enable = false;
-    dcdc_open_loop_oring_fet_enable = false;
 
     dcdc_llc_secondary_heatsink_1_temperature_x100 = 0;
     dcdc_llc_secondary_heatsink_2_temperature_x100 = 0;
@@ -531,7 +498,6 @@ void dcdc_slow_init(void)
     dcdc_pwm_primary_disable_and_lock();
     dcdc_pwm_sr_disable();
     dcdc_active_dummy_load_disable();
-    dcdc_oring_fet_disable();
     dcdc_pfc_fault_signal_status_get();
 }
 
@@ -745,17 +711,6 @@ bool dcdc_open_loop_active_dummy_load_enable_set(bool enable)
     if (dcdc_open_loop_enable)
     {
         dcdc_open_loop_active_dummy_load_enable = enable;
-        return true;
-    }
-
-    return false;
-}
-
-bool dcdc_open_loop_oring_fet_enable_set(bool enable)
-{
-    if (dcdc_open_loop_enable)
-    {
-        dcdc_open_loop_oring_fet_enable = enable;
         return true;
     }
 

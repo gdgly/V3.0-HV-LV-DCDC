@@ -46,8 +46,8 @@ static uint32_t sdp_llc_secondary_heatsink_1_over_temperature_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void);
 static uint32_t sdp_output_over_voltage_counter_get(void);
 static uint32_t sdp_dcdc_state_get(void);
-static uint32_t sdp_voltage_loop_gain_get(void);
-static uint32_t sdp_current_loop_gain_get(void);
+static uint32_t sdp_voltage_loop_gain_q16_get(void);
+static uint32_t sdp_current_loop_gain_q16_get(void);
 static uint32_t sdp_output_voltage_slope_q16_get(void);
 static uint32_t sdp_output_voltage_offset_q16_get(void);
 static uint32_t sdp_output_current_slope_q16_get(void);
@@ -63,10 +63,9 @@ static bool sdp_master_shutdown_set(uint32_t value);
 static bool sdp_open_loop_enable_set(uint32_t value);
 static bool sdp_open_loop_primary_enable_set(uint32_t value);
 static bool sdp_open_loop_active_dummy_load_enable_set(uint32_t value);
-static bool sdp_open_loop_oring_fet_enable_set(uint32_t value);
 static bool sdp_open_loop_primary_frequency_set(uint32_t value);
-static bool sdp_voltage_loop_gain_set(uint32_t value);
-static bool sdp_current_loop_gain_set(uint32_t value);
+static bool sdp_voltage_loop_gain_q16_set(uint32_t value);
+static bool sdp_current_loop_gain_q16_set(uint32_t value);
 static bool sdp_enter_factory_mode_set(uint32_t value);
 static bool sdp_output_voltage_slope_q16_set(uint32_t value);
 static bool sdp_output_voltage_offset_q16_set(uint32_t value);
@@ -87,8 +86,8 @@ static const struct sdp_get sdp_get_array[] =
     { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_get},
     { 30U, &sdp_output_over_voltage_counter_get},
     { 40U, &sdp_dcdc_state_get},
-    { 51U, &sdp_voltage_loop_gain_get},
-    { 52U, &sdp_current_loop_gain_get},
+    { 51U, &sdp_voltage_loop_gain_q16_get},
+    { 52U, &sdp_current_loop_gain_q16_get},
     {101U, &sdp_output_voltage_slope_q16_get},
     {102U, &sdp_output_voltage_offset_q16_get},
     {103U, &sdp_output_current_slope_q16_get},
@@ -107,10 +106,9 @@ static const struct sdp_set sdp_set_array[] =
     { 43U, &sdp_open_loop_enable_set},
     { 44U, &sdp_open_loop_primary_enable_set},
     { 46U, &sdp_open_loop_active_dummy_load_enable_set},
-    { 47U, &sdp_open_loop_oring_fet_enable_set},
-    { 48U, &sdp_open_loop_primary_frequency_set},
-    { 51U, &sdp_voltage_loop_gain_set},
-    { 52U, &sdp_current_loop_gain_set},
+    { 47U, &sdp_open_loop_primary_frequency_set},
+    { 51U, &sdp_voltage_loop_gain_q16_set},
+    { 52U, &sdp_current_loop_gain_q16_set},
     {100U, &sdp_enter_factory_mode_set},
     {101U, &sdp_output_voltage_slope_q16_set},
     {102U, &sdp_output_voltage_offset_q16_set},
@@ -233,7 +231,7 @@ static uint32_t sdp_dcdc_state_get(void)
 //
 //
 //
-static uint32_t sdp_voltage_loop_gain_get(void)
+static uint32_t sdp_voltage_loop_gain_q16_get(void)
 {
     return FLOAT_TO_Q16(dcdc_cpu_to_cla_mem.voltage_loop_gain);
 }
@@ -241,7 +239,7 @@ static uint32_t sdp_voltage_loop_gain_get(void)
 //
 //
 //
-static uint32_t sdp_current_loop_gain_get(void)
+static uint32_t sdp_current_loop_gain_q16_get(void)
 {
     return FLOAT_TO_Q16(dcdc_cpu_to_cla_mem.current_loop_gain);
 }
@@ -375,15 +373,6 @@ static bool sdp_open_loop_active_dummy_load_enable_set(uint32_t value)
 //
 //
 //
-static bool sdp_open_loop_oring_fet_enable_set(uint32_t value)
-{
-    bool enable = (value != 0UL) ? true : false;
-    return dcdc_open_loop_oring_fet_enable_set(enable);
-}
-
-//
-//
-//
 static bool sdp_open_loop_primary_frequency_set(uint32_t value)
 {
     uint16_t period = PWM_PERIOD_IN_COUNTS_UP_COUNTER(value);
@@ -393,7 +382,7 @@ static bool sdp_open_loop_primary_frequency_set(uint32_t value)
 //
 //
 //
-static bool sdp_voltage_loop_gain_set(uint32_t value)
+static bool sdp_voltage_loop_gain_q16_set(uint32_t value)
 {
     dcdc_cpu_to_cla_mem.voltage_loop_gain = Q16_TO_FLOAT(value);
     return true;
@@ -402,7 +391,7 @@ static bool sdp_voltage_loop_gain_set(uint32_t value)
 //
 //
 //
-static bool sdp_current_loop_gain_set(uint32_t value)
+static bool sdp_current_loop_gain_q16_set(uint32_t value)
 {
     dcdc_cpu_to_cla_mem.current_loop_gain = Q16_TO_FLOAT(value);
     return true;

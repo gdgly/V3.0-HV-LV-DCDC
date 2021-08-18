@@ -31,6 +31,9 @@
 #define DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT      1.0f
 #define DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT     0.0f
 
+#define DCDC_OUTPUT_CURRENT_REVERSE_DEFAULT_CALIBRATION_CALCULATE(i)    (int16_t)(((i) \
+        - DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT) / DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
+
 
 #define DCDC_OUTPUT_CURRENT_SETPOINT_MAX         50.0f
 
@@ -69,7 +72,7 @@ union dcdc_cpu_cla_union_t
 
 struct dcdc_cla_to_cpu
 {
-
+    union dcdc_cpu_cla_union_t i_out_raw_filtered;
 };
 
 struct dcdc_cpu_to_cla
@@ -136,7 +139,6 @@ extern bool dcdc_open_loop_enable_set(bool enable);
 extern bool dcdc_open_loop_primary_enable_set(bool enable);
 extern bool dcdc_open_loop_sr_enable_set(bool enable);
 extern bool dcdc_open_loop_active_dummy_load_enable_set(bool enable);
-extern bool dcdc_open_loop_oring_fet_enable_set(bool enable);
 extern bool dcdc_open_loop_primary_period_set(uint16_t period);
 
 
