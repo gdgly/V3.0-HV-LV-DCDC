@@ -36,8 +36,8 @@
 #define DCDC_CLA_CURRENT_COMPENSATOR_B1  1.0f
 #define DCDC_CLA_CURRENT_COMPENSATOR_B2  1.0f
 
-#define DCDC_CLA_CURRENT_LOOP_OUTPUT_MIN 0.0f
-#define DCDC_CLA_CURRENT_LOOP_OUTPUT_MAX 1.0f
+#define DCDC_CLA_CURRENT_LOOP_OUTPUT_MIN EPWM1_PERIOD_MIN
+#define DCDC_CLA_CURRENT_LOOP_OUTPUT_MAX EPWM1_PERIOD_MAX
 
 
 struct dcdc_cla_2p2z
@@ -167,7 +167,7 @@ static inline float32_t dcdc_cla_current_compensator_execute(float32_t v_loop_ou
 static inline float32_t dcdc_cla_open_loop_control_execute(void)
 {
 
-    return (float32_t)dcdc_cpu_to_cla_mem.open_loop_primary_period.cla * 0.01f;
+    return (float32_t)dcdc_cpu_to_cla_mem.open_loop_primary_period.cla;
 }
 
 //
@@ -196,34 +196,37 @@ static inline float32_t dcdc_cla_closed_loop_control_execute(void)
 //
 static inline float32_t dcdc_cla_control_execute(void)
 {
-    float32_t duty = 0.0f;
+    float32_t period;
 
     switch (dcdc_cpu_to_cla_mem.dcdc_state.cla)
     {
         case DCDC_STATE_OPEN_LOOP:
-            duty = dcdc_cla_open_loop_control_execute();
+            period = dcdc_cla_open_loop_control_execute();
             break;
         case DCDC_STATE_WAITING_FOR_SOFT_START_TO_FINISH:
-            duty = dcdc_cla_soft_start_control_execute();
+            period = dcdc_cla_soft_start_control_execute();
             break;
         case DCDC_STATE_NORMAL:
-            duty = dcdc_cla_closed_loop_control_execute();
+            period = dcdc_cla_closed_loop_control_execute();
             break;
         default:
+            period = DCDC_CLA_CURRENT_LOOP_OUTPUT_MIN;
             break;
     }
 
-    return duty;
+    return period;
 }
 
 //
 //
 //
-static inline void dcdc_cla_pwm_update(float32_t duty)
+static inline void dcdc_cla_pwm_update(float32_t period)
 {
-    uint16_t cmpa_value = (uint16_t)((duty * EPWM1_PERIOD_MAX) + 0.5f);
+    EPWM_setTimeBasePeriod(EPWM1_BASE, (uint16_t)period);
+
+    uint16_t cmpa_value = (uint16_t)(period * 0.5f);
     EPWM_setCounterCompareValue(EPWM1_BASE, EPWM_COUNTER_COMPARE_A, cmpa_value);
-    EPWM_setCounterCompareValue(EPWM2_BASE, EPWM_COUNTER_COMPARE_A, cmpa_value);
+    EPWM_setGlobalLoadOneShotLatch(EPWM1_BASE);
 }
 
 
@@ -238,8 +241,8 @@ __attribute__((interrupt)) void dcdc_cla_task_1(void)
 
     dcdc_cla_adc_filter();
 
-    float32_t duty = dcdc_cla_control_execute();
-    dcdc_cla_pwm_update(duty);
+    float32_t period = dcdc_cla_control_execute();
+    dcdc_cla_pwm_update(period);
 
 
     dcdc_cla_profiling_pin_clear();

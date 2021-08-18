@@ -66,6 +66,19 @@ static void pwm_basic_init(uint32_t base, uint16_t period)
 //
 //
 //
+static void pwm_global_load_config(uint32_t base)
+{
+    EPWM_setGlobalLoadTrigger(base, EPWM_GL_LOAD_PULSE_CNTR_ZERO);
+    EPWM_enableGlobalLoadOneShotMode(base);
+    EPWM_enableGlobalLoadRegisters(base, EPWM_GL_REGISTER_TBPRD_TBPRDHR
+                                   | EPWM_GL_REGISTER_CMPA_CMPAHR);
+
+    EPWM_enableGlobalLoad(base);
+}
+
+//
+//
+//
 static void pwm_deadband_config(uint32_t base, uint16_t deadband)
 {
     // The shadow must be configured first. Otherwise, the deadband
@@ -134,6 +147,8 @@ static void initEPWM(void)
 
     // Set up EPWM1
     pwm_basic_init(EPWM1_BASE, EPWM1_PERIOD_MIN);
+    pwm_global_load_config(EPWM1_BASE);
+
     EPWM_setSyncOutPulseMode(EPWM1_BASE, EPWM_SYNC_OUT_PULSE_ON_COUNTER_ZERO);
 
     // Configuring action-qualifiers for EPWM1 to generate
@@ -506,4 +521,5 @@ void dcdc_init(void)
 
     // Enable sync and clock to PWM
     SysCtl_enablePeripheral(SYSCTL_PERIPH_CLK_TBCLKSYNC);
+    EPWM_setGlobalLoadOneShotLatch(EPWM1_BASE);
 }
