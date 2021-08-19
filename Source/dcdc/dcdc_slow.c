@@ -533,7 +533,6 @@ void dcdc_slow_init(void)
     dcdc_pwm_primary_disable_and_lock();
     dcdc_pwm_sr_disable();
     dcdc_active_dummy_load_disable();
-    dcdc_pfc_fault_signal_status_get();
 }
 
 //
