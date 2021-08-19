@@ -205,6 +205,7 @@ static inline float32_t dcdc_cla_control_execute(void)
             period = dcdc_cla_soft_start_control_execute();
             break;
         case DCDC_STATE_NORMAL:
+        case DCDC_STATE_LIGHT_LOAD_OPERATION:
             period = dcdc_cla_closed_loop_control_execute();
             break;
         default:
