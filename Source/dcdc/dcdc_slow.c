@@ -49,7 +49,7 @@ static uint16_t dcdc_output_voltage_ovp_qualify_raw;
 static uint16_t dcdc_output_current_ocp_cutoff_raw;
 static uint16_t dcdc_output_current_ocp_qualify_raw;
 
-static int16_t dcdc_output_curret_hw_over_current_recurrence_counter;
+static int16_t dcdc_output_current_hw_over_current_recurrence_counter;
 
 static bool dcdc_output_current_hw_over_current;
 static bool dcdc_output_current_sw_over_current;
@@ -208,20 +208,20 @@ static bool dcdc_output_current_hw_over_current_evaluate(void)
     if (EPWM_getTripZoneFlagStatus(EPWM1_BASE) & EPWM_TZ_FLAG_DCAEVT2)
     {
         EPWM_clearTripZoneFlag(EPWM1_BASE, EPWM_TZ_FLAG_DCAEVT2 | EPWM_TZ_FLAG_CBC);
-        dcdc_output_curret_hw_over_current_recurrence_counter++;
+        dcdc_output_current_hw_over_current_recurrence_counter++;
     }
     else
-        dcdc_output_curret_hw_over_current_recurrence_counter--;
+        dcdc_output_current_hw_over_current_recurrence_counter--;
 
-    if (dcdc_output_curret_hw_over_current_recurrence_counter >= DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD)
+    if (dcdc_output_current_hw_over_current_recurrence_counter >= DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD)
     {
-        dcdc_output_curret_hw_over_current_recurrence_counter = DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD;
+        dcdc_output_current_hw_over_current_recurrence_counter = DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD;
         ++dcdc_output_current_hw_over_current_counter;
         dcdc_output_current_hw_over_current = true;
     }
-    else if (dcdc_output_curret_hw_over_current_recurrence_counter <= 0)
+    else if (dcdc_output_current_hw_over_current_recurrence_counter <= 0)
     {
-        dcdc_output_curret_hw_over_current_recurrence_counter = 0;
+        dcdc_output_current_hw_over_current_recurrence_counter = 0;
         dcdc_output_current_hw_over_current = false;
     }
 
@@ -478,7 +478,7 @@ void dcdc_slow_init(void)
     dcdc_output_voltage_thresholds_reverse_calibration_service();
     dcdc_output_current_thresholds_reverse_calibration_service();
 
-    dcdc_output_curret_hw_over_current_recurrence_counter = 0;
+    dcdc_output_current_hw_over_current_recurrence_counter = 0;
 
     dcdc_output_current_hw_over_current = false;
     dcdc_output_current_sw_over_current = false;
