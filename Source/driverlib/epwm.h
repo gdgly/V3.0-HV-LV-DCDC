@@ -4520,7 +4520,7 @@ EPWM_clearTripZoneFlag(uint32_t base, uint16_t tzFlags)
     // Clear Trip zone event flag
     //
     EALLOW;
-    HWREGH(base + EPWM_O_TZCLR) |= tzFlags;
+    HWREGH(base + EPWM_O_TZCLR) = tzFlags;
     EDIS;
 }
 
@@ -4560,7 +4560,7 @@ EPWM_clearCycleByCycleTripZoneFlag(uint32_t base, uint16_t tzCBCFlags)
     // Clear the Cycle By Cycle Trip zone flag
     //
     EALLOW;
-    HWREGH(base + EPWM_O_TZCBCCLR) |= tzCBCFlags;
+    HWREGH(base + EPWM_O_TZCBCCLR) = tzCBCFlags;
     EDIS;
 }
 
@@ -4598,7 +4598,7 @@ EPWM_clearOneShotTripZoneFlag(uint32_t base, uint16_t tzOSTFlags)
     // Clear the Cycle By Cycle Trip zone flag
     //
     EALLOW;
-    HWREGH(base + EPWM_O_TZOSTCLR) |= tzOSTFlags;
+    HWREGH(base + EPWM_O_TZOSTCLR) = tzOSTFlags;
     EDIS;
 }
 
@@ -4849,7 +4849,7 @@ EPWM_clearEventTriggerInterruptFlag(uint32_t base)
     //
     // Clear INT bit of ETCLR register
     //
-    HWREGH(base + EPWM_O_ETCLR) |= EPWM_ETCLR_INT;
+    HWREGH(base + EPWM_O_ETCLR) = EPWM_ETCLR_INT;
 }
 
 //*****************************************************************************
@@ -5344,7 +5344,7 @@ EPWM_clearADCTriggerFlag(uint32_t base,
     //
     // Clear SOC A/B bit of ETCLR register
     //
-    HWREGH(base + EPWM_O_ETCLR) |= (1U << ((uint16_t)adcSOCType + 2U));
+    HWREGH(base + EPWM_O_ETCLR) = (1U << ((uint16_t)adcSOCType + 2U));
 }
 
 //*****************************************************************************
