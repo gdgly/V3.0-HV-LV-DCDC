@@ -101,4 +101,6 @@ void dcdc_isr_init(void)
 {
     Interrupt_register(INT_EPWM1, &dcdc_ISR);
     Interrupt_enable(INT_EPWM1);
+
+    dcdc_isr_oring_fet_disable();
 }
