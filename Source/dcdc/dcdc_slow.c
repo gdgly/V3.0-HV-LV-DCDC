@@ -205,10 +205,10 @@ static bool dcdc_interlock_fault_evaluate(void)
 //
 static bool dcdc_output_over_current_evaluate(void)
 {
-    if (EPWM_getTripZoneFlagStatus(EPWM1_BASE) & EPWM_TZ_FLAG_CBC)
+    if (EPWM_getTripZoneFlagStatus(EPWM1_BASE) & EPWM_TZ_FLAG_DCAEVT2)
     {
-        EPWM_clearTripZoneFlag(EPWM1_BASE, EPWM_TZ_FLAG_CBC);
         dcdc_output_over_current_recurrence_counter++;
+        EPWM_clearTripZoneFlag(EPWM1_BASE, EPWM_TZ_FLAG_DCAEVT2 | EPWM_TZ_FLAG_CBC);
     }
     else
         dcdc_output_over_current_recurrence_counter--;
