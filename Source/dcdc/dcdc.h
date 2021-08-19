@@ -36,7 +36,6 @@
 
 
 #define DCDC_OUTPUT_VOLTAGE_SETPOINT_DEFAULT     54.0f
-#define DCDC_OUTPUT_CURRENT_SETPOINT_MAX         50.0f
 
 
 
@@ -81,7 +80,6 @@ struct dcdc_cpu_to_cla
     union dcdc_cpu_cla_union_t dcdc_state;
     union dcdc_cpu_cla_union_t open_loop_primary_period;
 
-    float32_t current_setpoint_max_raw;
     float32_t output_voltage_setpoint_raw;
     float32_t voltage_loop_gain;
     float32_t current_loop_gain;

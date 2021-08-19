@@ -579,8 +579,6 @@ void dcdc_output_current_thresholds_reverse_calibration_service(void)
             dcdc_output_current_threshold_reverse_calibration_calculate(DCDC_OUTPUT_CURRENT_OCP_CUTOFF);
     dcdc_output_current_ocp_qualify_raw =
             dcdc_output_current_threshold_reverse_calibration_calculate(DCDC_OUTPUT_CURRENT_OCP_QUALIFY);
-    dcdc_cpu_to_cla_mem.current_setpoint_max_raw = (float32_t)
-            dcdc_output_current_threshold_reverse_calibration_calculate(DCDC_OUTPUT_CURRENT_SETPOINT_MAX);
 }
 
 

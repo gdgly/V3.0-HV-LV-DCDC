@@ -134,8 +134,10 @@ static inline float32_t dcdc_cla_current_compensator_execute(float32_t v_loop_ou
     float32_t y0;
     float32_t temp;
 
+    float32_t current_setpoint__max_raw =
+            DCDC_ADC_RESULT_OUTPUT_CURRENT_EXTERNAL_SETPOINT;
     float32_t current_setpoint_raw =
-            v_loop_output * dcdc_cpu_to_cla_mem.current_setpoint_max_raw;
+            v_loop_output * current_setpoint__max_raw;
     x0 = current_setpoint_raw - dcdc_cla_i_out_raw_filtered;
     temp = x0 * dcdc_cpu_to_cla_mem.current_loop_gain;
     temp *= DCDC_CLA_CURRENT_COMPENSATOR_A0;
