@@ -46,9 +46,11 @@ static uint32_t sdp_serial_number_get(void);
 static uint32_t sdp_shelf_id_get(void);
 static uint32_t sdp_slot_id_get(void);
 static uint32_t sdp_output_voltage_1_x100_get(void);
+static uint32_t sdp_output_voltage_2_x100_get(void);
 static uint32_t sdp_output_current_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get(void);
+static uint32_t sdp_output_current_external_setpoint_x100_get(void);
 static uint32_t sdp_output_over_current_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_1_over_temperature_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void);
@@ -90,9 +92,11 @@ static const struct sdp_get sdp_get_array[] =
     {  3U, &sdp_shelf_id_get},
     {  4U, &sdp_slot_id_get},
     { 11U, &sdp_output_voltage_1_x100_get},
-    { 12U, &sdp_output_current_x100_get},
+    { 12U, &sdp_output_voltage_2_x100_get},
+    { 13U, &sdp_output_current_x100_get},
     { 14U, &sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get},
     { 15U, &sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get},
+    { 16U, &sdp_output_current_external_setpoint_x100_get},
     { 22U, &sdp_output_over_current_counter_get},
     { 25U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_get},
     { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_get},
@@ -131,6 +135,36 @@ static const struct sdp_set sdp_set_array[] =
 };
 
 
+
+//
+//
+//
+static uint32_t sdp_output_current_x100_calibrate(uint16_t raw_value)
+{
+    float32_t i_out_raw = (float32_t)raw_value;
+    float32_t i_out_default_calibrated =
+            (i_out_raw * DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
+            + DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT;
+    float32_t i_out_calibrated =
+            (i_out_default_calibrated * dcdc_factory_s.output_current.slope)
+            + dcdc_factory_s.output_current.offset;
+    return (uint32_t)(i_out_calibrated * 100.0f);
+}
+
+//
+//
+//
+static uint32_t sdp_output_voltage_x100_calibrate(uint16_t raw_value)
+{
+    float32_t v_out_raw = (float32_t)raw_value;
+    float32_t v_out_default_calibrated =
+            (v_out_raw * DCDC_CALIBRATION_V_OUT_SLOPE_DEFAULT)
+            + DCDC_CALIBRATION_V_OUT_OFFSET_DEFAULT;
+    float32_t v_out_calibrated =
+            (v_out_default_calibrated * dcdc_factory_s.output_voltage.slope)
+            + dcdc_factory_s.output_voltage.offset;
+    return (uint32_t)(v_out_calibrated * 100.0f);
+}
 
 //
 //
@@ -177,14 +211,15 @@ static uint32_t sdp_slot_id_get(void)
 //
 static uint32_t sdp_output_voltage_1_x100_get(void)
 {
-    float32_t v_out_1_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1;
-    float32_t v_out_1_default_calibrated =
-            (v_out_1_raw * DCDC_CALIBRATION_V_OUT_SLOPE_DEFAULT)
-            + DCDC_CALIBRATION_V_OUT_OFFSET_DEFAULT;
-    float32_t v_out_1_calibrated =
-            (v_out_1_default_calibrated * dcdc_factory_s.output_voltage.slope)
-            + dcdc_factory_s.output_voltage.offset;
-    return (uint32_t)(v_out_1_calibrated * 100.0f);
+    return sdp_output_voltage_x100_calibrate(DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1);
+}
+
+//
+//
+//
+static uint32_t sdp_output_voltage_2_x100_get(void)
+{
+    return sdp_output_voltage_x100_calibrate(DCDC_ADC_RESULT_OUTPUT_VOLTAGE_2);
 }
 
 //
@@ -192,14 +227,7 @@ static uint32_t sdp_output_voltage_1_x100_get(void)
 //
 static uint32_t sdp_output_current_x100_get(void)
 {
-    float32_t i_out_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_CURRENT;
-    float32_t i_out_default_calibrated =
-            (i_out_raw * DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
-            + DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT;
-    float32_t i_out_calibrated =
-            (i_out_default_calibrated * dcdc_factory_s.output_current.slope)
-            + dcdc_factory_s.output_current.offset;
-    return (uint32_t)(i_out_calibrated * 100.0f);
+    return sdp_output_current_x100_calibrate(DCDC_ADC_RESULT_OUTPUT_CURRENT);
 }
 
 //
@@ -216,6 +244,14 @@ static uint32_t sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get(void)
 static uint32_t sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get(void)
 {
     return dcdc_llc_secondary_heatsink_2_temperature_x100_get();
+}
+
+//
+//
+//
+static uint32_t sdp_output_current_external_setpoint_x100_get(void)
+{
+    return sdp_output_current_x100_calibrate(DCDC_ADC_RESULT_OUTPUT_CURRENT_EXTERNAL_SETPOINT);
 }
 
 //
