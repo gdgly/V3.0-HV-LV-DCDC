@@ -25,6 +25,7 @@
 #define DCDC_OUTPUT_CURRENT_OCP_QUALIFY        55.0f
 
 #define DCDC_OUTPUT_OCP_RECURRENCE_THRESHOLD    5
+#define DCDC_OUTPUT_OVP_RECURRENCE_THRESHOLD    5
 
 #define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF     5.0f
 #define DCDC_LIGHT_LOAD_OPERATION_OUTPUT_CURRENT_CUTOFF_RAW \
@@ -50,11 +51,13 @@ static uint16_t dcdc_output_current_ocp_cutoff_raw;
 static uint16_t dcdc_output_current_ocp_qualify_raw;
 
 static int16_t dcdc_output_current_hw_over_current_recurrence_counter;
+static int16_t dcdc_output_voltage_hw_over_voltage_recurrence_counter;
 
 static bool dcdc_output_current_hw_over_current;
 static bool dcdc_output_current_sw_over_current;
 static bool dcdc_llc_secondary_heatsink_1_over_temperature;
 static bool dcdc_llc_secondary_heatsink_2_over_temperature;
+static bool dcdc_output_voltage_hw_over_voltage;
 static bool dcdc_output_voltage_sw_over_voltage;
 
 static bool dcdc_non_critical_faults_active;
@@ -64,6 +67,7 @@ static uint16_t dcdc_output_current_hw_over_current_counter;
 static uint16_t dcdc_output_current_sw_over_current_counter;
 static uint16_t dcdc_llc_secondary_heatsink_1_over_temperature_counter;
 static uint16_t dcdc_llc_secondary_heatsink_2_over_temperature_counter;
+static uint16_t dcdc_output_voltage_hw_over_voltage_counter;
 static uint16_t dcdc_output_voltage_sw_over_voltage_counter;
 
 
@@ -280,6 +284,34 @@ static bool dcdc_llc_secondary_heatsink_2_over_temperature_evaluate(void)
 //
 //
 //
+static bool dcdc_output_voltage_hw_over_voltage_evaluate(void)
+{
+    if (EPWM_getTripZoneFlagStatus(EPWM1_BASE) & EPWM_TZ_FLAG_DCBEVT2)
+    {
+        EPWM_clearTripZoneFlag(EPWM1_BASE, EPWM_TZ_FLAG_DCBEVT2 | EPWM_TZ_FLAG_CBC);
+        dcdc_output_voltage_hw_over_voltage_recurrence_counter++;
+    }
+    else
+        dcdc_output_voltage_hw_over_voltage_recurrence_counter--;
+
+    if (dcdc_output_voltage_hw_over_voltage_recurrence_counter >= DCDC_OUTPUT_OVP_RECURRENCE_THRESHOLD)
+    {
+        dcdc_output_voltage_hw_over_voltage_recurrence_counter = DCDC_OUTPUT_OVP_RECURRENCE_THRESHOLD;
+        ++dcdc_output_voltage_hw_over_voltage_counter;
+        dcdc_output_voltage_hw_over_voltage = true;
+    }
+    else if (dcdc_output_voltage_hw_over_voltage_recurrence_counter <= 0)
+    {
+        dcdc_output_voltage_hw_over_voltage_recurrence_counter = 0;
+        dcdc_output_voltage_hw_over_voltage = false;
+    }
+
+    return dcdc_output_voltage_hw_over_voltage;
+}
+
+//
+//
+//
 static bool dcdc_output_voltage_sw_over_voltage_evaluate(void)
 {
     // TODO: Use filtered signal from CLA?
@@ -303,11 +335,11 @@ static void dcdc_faults_service(void)
     bool non_critical_faults_active = false;
     bool critical_faults_active = false;
 
-    // TODO: Add HW OVP
     non_critical_faults_active |= dcdc_output_current_hw_over_current_evaluate();
     non_critical_faults_active |= dcdc_output_current_sw_over_current_evaluate();
     non_critical_faults_active |= dcdc_llc_secondary_heatsink_1_over_temperature_evaluate();
     non_critical_faults_active |= dcdc_llc_secondary_heatsink_2_over_temperature_evaluate();
+    non_critical_faults_active |= dcdc_output_voltage_hw_over_voltage_evaluate();
     non_critical_faults_active |= dcdc_output_voltage_sw_over_voltage_evaluate();
     dcdc_non_critical_faults_active = non_critical_faults_active;
 
@@ -479,11 +511,13 @@ void dcdc_slow_init(void)
     dcdc_output_current_thresholds_reverse_calibration_service();
 
     dcdc_output_current_hw_over_current_recurrence_counter = 0;
+    dcdc_output_voltage_hw_over_voltage_recurrence_counter = 0;
 
     dcdc_output_current_hw_over_current = false;
     dcdc_output_current_sw_over_current = false;
     dcdc_llc_secondary_heatsink_1_over_temperature = false;
     dcdc_llc_secondary_heatsink_2_over_temperature = false;
+    dcdc_output_voltage_hw_over_voltage = false;
     dcdc_output_voltage_sw_over_voltage = false;
 
     dcdc_non_critical_faults_active = false;
@@ -493,6 +527,7 @@ void dcdc_slow_init(void)
     dcdc_output_current_sw_over_current_counter = 0U;
     dcdc_llc_secondary_heatsink_1_over_temperature_counter = 0U;
     dcdc_llc_secondary_heatsink_2_over_temperature_counter = 0U;
+    dcdc_output_voltage_hw_over_voltage_counter = 0U;
     dcdc_output_voltage_sw_over_voltage_counter = 0U;
 
     dcdc_pwm_primary_disable_and_lock();
