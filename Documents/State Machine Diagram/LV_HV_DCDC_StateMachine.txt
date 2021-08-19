@@ -19,7 +19,7 @@ OpenLoop -left-> Shutdown: Fault (except Input UVP)\n/ [Turn off PWMs,\nOpen Inr
 note bottom of OpenLoop
 	Primary and SR PWM operation can be enabled/disabled,
 	as well as the Inrush Relay.
-	The PWMs duty cycle can be adjusted.
+	The Primary PWM period can be adjusted.
 end note
 
 
