@@ -37,7 +37,7 @@ static bool sdp_factory_mode_enabled;
 static uint32_t sdp_fw_build_get(void);
 static uint32_t sdp_hw_id_get(void);
 static uint32_t sdp_serial_number_get(void);
-static uint32_t sdp_output_voltage_1_get(void);
+static uint32_t sdp_output_voltage_1_x100_get(void);
 static uint32_t sdp_output_current_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get(void);
@@ -77,7 +77,7 @@ static const struct sdp_get sdp_get_array[] =
     {  0U, &sdp_fw_build_get},
     {  1U, &sdp_hw_id_get},
     {  2U, &sdp_serial_number_get},
-    { 11U, &sdp_output_voltage_1_get},
+    { 11U, &sdp_output_voltage_1_x100_get},
     { 12U, &sdp_output_current_x100_get},
     { 14U, &sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get},
     { 15U, &sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get},
@@ -145,7 +145,7 @@ static uint32_t sdp_serial_number_get(void)
 //
 //
 //
-static uint32_t sdp_output_voltage_1_get(void)
+static uint32_t sdp_output_voltage_1_x100_get(void)
 {
     float32_t v_out_1_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1;
     float32_t v_out_1_default_calibrated =
@@ -154,7 +154,7 @@ static uint32_t sdp_output_voltage_1_get(void)
     float32_t v_out_1_calibrated =
             (v_out_1_default_calibrated * dcdc_factory_s.output_voltage.slope)
             + dcdc_factory_s.output_voltage.offset;
-    return (uint32_t)v_out_1_calibrated;
+    return (uint32_t)(v_out_1_calibrated * 100.0f);
 }
 
 //
