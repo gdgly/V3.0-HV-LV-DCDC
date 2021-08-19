@@ -55,7 +55,7 @@ static bool dcdc_output_current_hw_over_current;
 static bool dcdc_output_current_sw_over_current;
 static bool dcdc_llc_secondary_heatsink_1_over_temperature;
 static bool dcdc_llc_secondary_heatsink_2_over_temperature;
-static bool dcdc_output_voltage_over_voltage;
+static bool dcdc_output_voltage_sw_over_voltage;
 
 static bool dcdc_non_critical_faults_active;
 static bool dcdc_critical_faults_active;
@@ -64,7 +64,7 @@ static uint16_t dcdc_output_current_hw_over_current_counter;
 static uint16_t dcdc_output_current_sw_over_current_counter;
 static uint16_t dcdc_llc_secondary_heatsink_1_over_temperature_counter;
 static uint16_t dcdc_llc_secondary_heatsink_2_over_temperature_counter;
-static uint16_t dcdc_output_voltage_over_voltage_counter;
+static uint16_t dcdc_output_voltage_sw_over_voltage_counter;
 
 
 
@@ -280,19 +280,19 @@ static bool dcdc_llc_secondary_heatsink_2_over_temperature_evaluate(void)
 //
 //
 //
-static bool dcdc_output_voltage_over_voltage_evaluate(void)
+static bool dcdc_output_voltage_sw_over_voltage_evaluate(void)
 {
     // TODO: Use filtered signal from CLA?
     uint16_t v_out_1_raw = DCDC_ADC_RESULT_OUTPUT_VOLTAGE_1;
     if (v_out_1_raw > dcdc_output_voltage_ovp_cutoff_raw)
     {
-        ++dcdc_output_voltage_over_voltage_counter;
-        dcdc_output_voltage_over_voltage = true;
+        ++dcdc_output_voltage_sw_over_voltage_counter;
+        dcdc_output_voltage_sw_over_voltage = true;
     }
     else if (v_out_1_raw < dcdc_output_voltage_ovp_qualify_raw)
-        dcdc_output_voltage_over_voltage = false;
+        dcdc_output_voltage_sw_over_voltage = false;
 
-    return dcdc_output_voltage_over_voltage;
+    return dcdc_output_voltage_sw_over_voltage;
 }
 
 //
@@ -308,7 +308,7 @@ static void dcdc_faults_service(void)
     non_critical_faults_active |= dcdc_output_current_sw_over_current_evaluate();
     non_critical_faults_active |= dcdc_llc_secondary_heatsink_1_over_temperature_evaluate();
     non_critical_faults_active |= dcdc_llc_secondary_heatsink_2_over_temperature_evaluate();
-    non_critical_faults_active |= dcdc_output_voltage_over_voltage_evaluate();
+    non_critical_faults_active |= dcdc_output_voltage_sw_over_voltage_evaluate();
     dcdc_non_critical_faults_active = non_critical_faults_active;
 
     critical_faults_active |= dcdc_interlock_fault_evaluate();
@@ -484,7 +484,7 @@ void dcdc_slow_init(void)
     dcdc_output_current_sw_over_current = false;
     dcdc_llc_secondary_heatsink_1_over_temperature = false;
     dcdc_llc_secondary_heatsink_2_over_temperature = false;
-    dcdc_output_voltage_over_voltage = false;
+    dcdc_output_voltage_sw_over_voltage = false;
 
     dcdc_non_critical_faults_active = false;
     dcdc_critical_faults_active = false;
@@ -493,7 +493,7 @@ void dcdc_slow_init(void)
     dcdc_output_current_sw_over_current_counter = 0U;
     dcdc_llc_secondary_heatsink_1_over_temperature_counter = 0U;
     dcdc_llc_secondary_heatsink_2_over_temperature_counter = 0U;
-    dcdc_output_voltage_over_voltage_counter = 0U;
+    dcdc_output_voltage_sw_over_voltage_counter = 0U;
 
     dcdc_pwm_primary_disable_and_lock();
     dcdc_pwm_sr_disable();
@@ -620,7 +620,7 @@ uint16_t dcdc_llc_secondary_heatsink_2_over_temperature_counter_get(void)
 
 uint16_t dcdc_output_voltage_over_voltage_counter_get(void)
 {
-    return dcdc_output_voltage_over_voltage_counter;
+    return dcdc_output_voltage_sw_over_voltage_counter;
 }
 
 
@@ -647,7 +647,7 @@ void dcdc_llc_secondary_heatsink_2_over_temperature_counter_reset(void)
 
 void dcdc_output_voltage_over_voltage_counter_reset(void)
 {
-    dcdc_output_voltage_over_voltage_counter = 0U;
+    dcdc_output_voltage_sw_over_voltage_counter = 0U;
 }
 
 void dcdc_master_startup_set(void)
