@@ -14,6 +14,7 @@
 #include "sdp/sdp.h"
 #include "sci.h"
 #include "hwid/hwid.h"
+#include "slot_shelf_id/slot_shelf_id.h"
 #include "pers/pers.h"
 #include "version.h"
 
@@ -42,6 +43,8 @@ static bool sdp_factory_mode_enabled;
 static uint32_t sdp_fw_build_get(void);
 static uint32_t sdp_hw_id_get(void);
 static uint32_t sdp_serial_number_get(void);
+static uint32_t sdp_shelf_id_get(void);
+static uint32_t sdp_slot_id_get(void);
 static uint32_t sdp_output_voltage_1_x100_get(void);
 static uint32_t sdp_output_current_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get(void);
@@ -84,6 +87,8 @@ static const struct sdp_get sdp_get_array[] =
     {  0U, &sdp_fw_build_get},
     {  1U, &sdp_hw_id_get},
     {  2U, &sdp_serial_number_get},
+    {  3U, &sdp_shelf_id_get},
+    {  4U, &sdp_slot_id_get},
     { 11U, &sdp_output_voltage_1_x100_get},
     { 12U, &sdp_output_current_x100_get},
     { 14U, &sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get},
@@ -149,6 +154,22 @@ static uint32_t sdp_hw_id_get(void)
 static uint32_t sdp_serial_number_get(void)
 {
     return dcdc_factory_s.serial_number;
+}
+
+//
+//
+//
+static uint32_t sdp_shelf_id_get(void)
+{
+    return slot_shelf_id_get(DCDC_ADC_RESULT_SHELF_ID);
+}
+
+//
+//
+//
+static uint32_t sdp_slot_id_get(void)
+{
+    return slot_shelf_id_get(DCDC_ADC_RESULT_SLOT_ID);
 }
 
 //
