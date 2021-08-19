@@ -51,10 +51,12 @@ static uint32_t sdp_output_current_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get(void);
 static uint32_t sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get(void);
 static uint32_t sdp_output_current_external_setpoint_x100_get(void);
-static uint32_t sdp_output_over_current_counter_get(void);
+static uint32_t sdp_output_voltage_hw_over_voltage_counter_get(void);
+static uint32_t sdp_output_voltage_sw_over_voltage_counter_get(void);
+static uint32_t sdp_output_current_hw_over_current_counter_get(void);
+static uint32_t sdp_output_current_sw_over_current_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_1_over_temperature_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void);
-static uint32_t sdp_output_over_voltage_counter_get(void);
 static uint32_t sdp_dcdc_state_get(void);
 static uint32_t sdp_output_voltage_setpoint_x100_get(void);
 static uint32_t sdp_voltage_loop_gain_q16_get(void);
@@ -65,10 +67,12 @@ static uint32_t sdp_output_current_slope_q16_get(void);
 static uint32_t sdp_output_current_offset_q16_get(void);
 
 static bool sdp_serial_number_set(uint32_t value);
-static bool sdp_output_over_current_counter_set(uint32_t value);
+static bool sdp_output_voltage_hw_over_voltage_counter_set(uint32_t value);
+static bool sdp_output_voltage_sw_over_voltage_counter_set(uint32_t value);
+static bool sdp_output_current_hw_over_current_counter_set(uint32_t value);
+static bool sdp_output_current_sw_over_current_counter_set(uint32_t value);
 static bool sdp_llc_secondary_heatsink_1_over_temperature_counter_set(uint32_t value);
 static bool sdp_llc_secondary_heatsink_2_over_temperature_counter_set(uint32_t value);
-static bool sdp_output_over_voltage_counter_set(uint32_t value);
 static bool sdp_master_startup_set(uint32_t value);
 static bool sdp_master_shutdown_set(uint32_t value);
 static bool sdp_open_loop_enable_set(uint32_t value);
@@ -97,10 +101,12 @@ static const struct sdp_get sdp_get_array[] =
     { 14U, &sdp_dcdc_llc_secondary_heatsink_1_temperature_x100_get},
     { 15U, &sdp_dcdc_llc_secondary_heatsink_2_temperature_x100_get},
     { 16U, &sdp_output_current_external_setpoint_x100_get},
-    { 22U, &sdp_output_over_current_counter_get},
-    { 25U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_get},
-    { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_get},
-    { 30U, &sdp_output_over_voltage_counter_get},
+    { 20U, &sdp_output_voltage_hw_over_voltage_counter_get},
+    { 21U, &sdp_output_voltage_sw_over_voltage_counter_get},
+    { 22U, &sdp_output_current_hw_over_current_counter_get},
+    { 23U, &sdp_output_current_sw_over_current_counter_get},
+    { 24U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_get},
+    { 25U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_get},
     { 40U, &sdp_dcdc_state_get},
     { 50U, &sdp_output_voltage_setpoint_x100_get},
     { 51U, &sdp_voltage_loop_gain_q16_get},
@@ -114,10 +120,12 @@ static const struct sdp_get sdp_get_array[] =
 static const struct sdp_set sdp_set_array[] =
 {
     {  2U, &sdp_serial_number_set},
-    { 22U, &sdp_output_over_current_counter_set},
-    { 25U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_set},
-    { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_set},
-    { 30U, &sdp_output_over_voltage_counter_set},
+    { 20U, &sdp_output_voltage_hw_over_voltage_counter_set},
+    { 21U, &sdp_output_voltage_sw_over_voltage_counter_set},
+    { 22U, &sdp_output_current_hw_over_current_counter_set},
+    { 23U, &sdp_output_current_sw_over_current_counter_set},
+    { 24U, &sdp_llc_secondary_heatsink_1_over_temperature_counter_set},
+    { 25U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_set},
     { 41U, &sdp_master_startup_set},
     { 42U, &sdp_master_shutdown_set},
     { 43U, &sdp_open_loop_enable_set},
@@ -257,9 +265,33 @@ static uint32_t sdp_output_current_external_setpoint_x100_get(void)
 //
 //
 //
-static uint32_t sdp_output_over_current_counter_get(void)
+static uint32_t sdp_output_voltage_hw_over_voltage_counter_get(void)
 {
-    return dcdc_output_over_current_counter_get();
+    return dcdc_output_voltage_sw_over_voltage_counter_get();
+}
+
+//
+//
+//
+static uint32_t sdp_output_voltage_sw_over_voltage_counter_get(void)
+{
+    return dcdc_output_voltage_sw_over_voltage_counter_get();
+}
+
+//
+//
+//
+static uint32_t sdp_output_current_hw_over_current_counter_get(void)
+{
+    return dcdc_output_current_hw_over_current_counter_get();
+}
+
+//
+//
+//
+static uint32_t sdp_output_current_sw_over_current_counter_get(void)
+{
+    return dcdc_output_current_sw_over_current_counter_get();
 }
 
 //
@@ -276,14 +308,6 @@ static uint32_t sdp_llc_secondary_heatsink_1_over_temperature_counter_get(void)
 static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void)
 {
     return dcdc_llc_secondary_heatsink_2_over_temperature_counter_get();
-}
-
-//
-//
-//
-static uint32_t sdp_output_over_voltage_counter_get(void)
-{
-    return dcdc_output_voltage_over_voltage_counter_get();
 }
 
 //
@@ -366,9 +390,36 @@ static bool sdp_serial_number_set(uint32_t value)
 //
 //
 //
-static bool sdp_output_over_current_counter_set(uint32_t value)
+static bool sdp_output_voltage_hw_over_voltage_counter_set(uint32_t value)
 {
-    dcdc_output_over_current_counter_reset();
+    dcdc_output_voltage_hw_over_voltage_counter_reset();
+    return true;
+}
+
+//
+//
+//
+static bool sdp_output_voltage_sw_over_voltage_counter_set(uint32_t value)
+{
+    dcdc_output_voltage_sw_over_voltage_counter_reset();
+    return true;
+}
+
+//
+//
+//
+static bool sdp_output_current_hw_over_current_counter_set(uint32_t value)
+{
+    dcdc_output_current_hw_over_current_counter_reset();
+    return true;
+}
+
+//
+//
+//
+static bool sdp_output_current_sw_over_current_counter_set(uint32_t value)
+{
+    dcdc_output_current_sw_over_current_counter_reset();
     return true;
 }
 
@@ -387,15 +438,6 @@ static bool sdp_llc_secondary_heatsink_1_over_temperature_counter_set(uint32_t v
 static bool sdp_llc_secondary_heatsink_2_over_temperature_counter_set(uint32_t value)
 {
     dcdc_llc_secondary_heatsink_2_over_temperature_counter_reset();
-    return true;
-}
-
-//
-//
-//
-static bool sdp_output_over_voltage_counter_set(uint32_t value)
-{
-    dcdc_output_voltage_over_voltage_counter_reset();
     return true;
 }
 

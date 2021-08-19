@@ -633,7 +633,7 @@ enum dcdc_states dcdc_state_get(void)
     return (enum dcdc_states)dcdc_cpu_to_cla_mem.dcdc_state.cpu;
 }
 
-uint16_t dcdc_output_over_current_counter_get(void)
+uint16_t dcdc_output_current_hw_over_current_counter_get(void)
 {
     return dcdc_output_current_hw_over_current_counter;
 }
@@ -653,14 +653,19 @@ uint16_t dcdc_llc_secondary_heatsink_2_over_temperature_counter_get(void)
     return dcdc_llc_secondary_heatsink_2_over_temperature_counter;
 }
 
-uint16_t dcdc_output_voltage_over_voltage_counter_get(void)
+uint16_t dcdc_output_voltage_hw_over_voltage_counter_get(void)
+{
+    return dcdc_output_voltage_hw_over_voltage_counter;
+}
+
+uint16_t dcdc_output_voltage_sw_over_voltage_counter_get(void)
 {
     return dcdc_output_voltage_sw_over_voltage_counter;
 }
 
 
 
-void dcdc_output_over_current_counter_reset(void)
+void dcdc_output_current_hw_over_current_counter_reset(void)
 {
     dcdc_output_current_hw_over_current_counter = 0U;
 }
@@ -680,7 +685,12 @@ void dcdc_llc_secondary_heatsink_2_over_temperature_counter_reset(void)
     dcdc_llc_secondary_heatsink_2_over_temperature_counter = 0U;
 }
 
-void dcdc_output_voltage_over_voltage_counter_reset(void)
+void dcdc_output_voltage_hw_over_voltage_counter_reset(void)
+{
+    dcdc_output_voltage_hw_over_voltage_counter = 0U;
+}
+
+void dcdc_output_voltage_sw_over_voltage_counter_reset(void)
 {
     dcdc_output_voltage_sw_over_voltage_counter = 0U;
 }
