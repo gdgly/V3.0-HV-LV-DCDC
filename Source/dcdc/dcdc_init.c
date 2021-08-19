@@ -135,6 +135,27 @@ static void pwm_cbc_tripzone_config(uint32_t base)
                                       EPWM_DC_MODULE_A,
                                       EPWM_DC_EVENT_2,
                                       EPWM_DC_EVENT_SOURCE_ORIG_SIGNAL);
+
+
+
+    // Configure ePWMxA and ePWMxB to output low on DCBEVT2 TRIP (Cycle-by-Cycle)
+    EPWM_setTripZoneAction(base, EPWM_TZ_ACTION_EVENT_DCBEVT2,
+                           EPWM_TZ_ACTION_LOW);
+    // Trigger event when DCBL is high
+    EPWM_setTripZoneDigitalCompareEventCondition(base,
+                                                 EPWM_TZ_DC_OUTPUT_B2,
+                                                 EPWM_TZ_EVENT_DCXL_HIGH);
+    // Configure DCBL to use TRIP5 as an input
+    EPWM_enableDigitalCompareTripCombinationInput(base,
+                                                  EPWM_DC_COMBINATIONAL_TRIPIN5,
+                                                  EPWM_DC_TYPE_DCBL);
+    // Enable DCB as Cycle-by-Cycle
+    EPWM_enableTripZoneSignals(base, EPWM_TZ_SIGNAL_DCBEVT2);
+    // Configure the DCB path to be unfiltered and asynchronous
+    EPWM_setDigitalCompareEventSource(base,
+                                      EPWM_DC_MODULE_B,
+                                      EPWM_DC_EVENT_2,
+                                      EPWM_DC_EVENT_SOURCE_ORIG_SIGNAL);
 }
 
 //
