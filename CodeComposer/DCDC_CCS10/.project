@@ -126,11 +126,6 @@
 			<locationURI>SOURCE_LOC/driverlib/epwm.c</locationURI>
 		</link>
 		<link>
-			<name>Source/eqep.c</name>
-			<type>1</type>
-			<locationURI>SOURCE_LOC/driverlib/eqep.c</locationURI>
-		</link>
-		<link>
 			<name>Source/f28004x_codestartbranch.asm</name>
 			<type>1</type>
 			<locationURI>SOURCE_LOC/common/source/f28004x_codestartbranch.asm</locationURI>
