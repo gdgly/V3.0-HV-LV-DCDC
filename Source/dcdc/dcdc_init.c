@@ -296,18 +296,18 @@ static void initCMPSS(void)
     ASysCtl_selectCMPHPMux(ASYSCTL_CMPHPMUX_SELECT_4, 0);
     cmpss_basic_init(CMPSS4_BASE, false);
     CMPSS_setDACValueHigh(CMPSS4_BASE, DCDC_CMPSS_DAC_VALUE_OUTPUT_OCP);
-    // Configure TRIP4 to be CTRIP1H using the ePWM X-BAR
-    XBAR_setEPWMMuxConfig(XBAR_TRIP4, XBAR_EPWM_MUX00_CMPSS1_CTRIPH);
-    XBAR_enableEPWMMux(XBAR_TRIP4, XBAR_MUX00);
+    // Configure TRIP4 to be CTRIP4H using the ePWM X-BAR
+    XBAR_setEPWMMuxConfig(XBAR_TRIP4, XBAR_EPWM_MUX06_CMPSS4_CTRIPH);
+    XBAR_enableEPWMMux(XBAR_TRIP4, XBAR_MUX06);
 
 
     // Select CMPSS-7 High comparator Positive input 1
     ASysCtl_selectCMPHPMux(ASYSCTL_CMPHPMUX_SELECT_7, 1);
     cmpss_basic_init(CMPSS7_BASE, false);
     CMPSS_setDACValueHigh(CMPSS7_BASE, DCDC_CMPSS_DAC_VALUE_OUTPUT_HW_OVP);
-    // Configure TRIP4 to be CTRIP1H or CTRIP1L using the ePWM X-BAR
-    XBAR_setEPWMMuxConfig(XBAR_TRIP4, XBAR_EPWM_MUX02_CMPSS2_CTRIPH);
-    XBAR_enableEPWMMux(XBAR_TRIP4, XBAR_MUX02);
+    // Configure TRIP5 to be CTRIP7H using the ePWM X-BAR
+    XBAR_setEPWMMuxConfig(XBAR_TRIP5, XBAR_EPWM_MUX12_CMPSS7_CTRIPH);
+    XBAR_enableEPWMMux(XBAR_TRIP5, XBAR_MUX12);
 
 
     // Configure comparators to be used for synchronous rectification.
