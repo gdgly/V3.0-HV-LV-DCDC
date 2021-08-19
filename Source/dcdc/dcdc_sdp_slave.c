@@ -163,13 +163,13 @@ static uint32_t sdp_output_voltage_1_x100_get(void)
 static uint32_t sdp_output_current_x100_get(void)
 {
     float32_t i_out_raw = (float32_t)DCDC_ADC_RESULT_OUTPUT_CURRENT;
-    float32_t i_out_default_calibrated_x100 =
-            ((i_out_raw * DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
-            + DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT) * 100.0f;
-    float32_t i_out_calibrated_x100 =
-            (i_out_default_calibrated_x100 * dcdc_factory_s.output_current.slope)
+    float32_t i_out_default_calibrated =
+            (i_out_raw * DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
+            + DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT;
+    float32_t i_out_calibrated =
+            (i_out_default_calibrated * dcdc_factory_s.output_current.slope)
             + dcdc_factory_s.output_current.offset;
-    return (uint32_t)i_out_calibrated_x100;
+    return (uint32_t)(i_out_calibrated * 100.0f);
 }
 
 //
