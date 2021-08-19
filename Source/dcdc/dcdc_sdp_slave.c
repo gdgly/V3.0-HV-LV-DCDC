@@ -77,6 +77,7 @@ static bool sdp_master_startup_set(uint32_t value);
 static bool sdp_master_shutdown_set(uint32_t value);
 static bool sdp_open_loop_enable_set(uint32_t value);
 static bool sdp_open_loop_primary_enable_set(uint32_t value);
+static bool sdp_open_loop_sr_enable_set(uint32_t value);
 static bool sdp_open_loop_active_dummy_load_enable_set(uint32_t value);
 static bool sdp_open_loop_primary_frequency_set(uint32_t value);
 static bool sdp_output_voltage_setpoint_x100_set(uint32_t value);
@@ -130,6 +131,7 @@ static const struct sdp_set sdp_set_array[] =
     { 42U, &sdp_master_shutdown_set},
     { 43U, &sdp_open_loop_enable_set},
     { 44U, &sdp_open_loop_primary_enable_set},
+    { 45U, &sdp_open_loop_sr_enable_set},
     { 46U, &sdp_open_loop_active_dummy_load_enable_set},
     { 47U, &sdp_open_loop_primary_frequency_set},
     { 50U, &sdp_output_voltage_setpoint_x100_set},
@@ -475,6 +477,15 @@ static bool sdp_open_loop_primary_enable_set(uint32_t value)
 {
     bool enable = (value != 0UL) ? true : false;
     return dcdc_open_loop_primary_enable_set(enable);
+}
+
+//
+//
+//
+static bool sdp_open_loop_sr_enable_set(uint32_t value)
+{
+    bool enable = (value != 0UL) ? true : false;
+    return dcdc_open_loop_sr_enable_set(enable);
 }
 
 //
