@@ -16,10 +16,6 @@
 #define DCDC_LPF_ALPHA_OUTPUT_VOLTAGE 0.5f // f_cutoff = 7.72kHz at 70kHz sampling frequency
 
 // TODO: ALL these values are placeholders.
-#define DCDC_CLA_VOLTAGE_SETPOINT        54.0f
-#define DCDC_CLA_VOLTAGE_SETPOINT_RAW    ((DCDC_CLA_VOLTAGE_SETPOINT - DCDC_CALIBRATION_V_OUT_OFFSET_DEFAULT) \
-                                         / DCDC_CALIBRATION_V_OUT_SLOPE_DEFAULT)
-
 #define DCDC_CLA_VOLTAGE_COMPENSATOR_A0  1.0f
 #define DCDC_CLA_VOLTAGE_COMPENSATOR_A1  1.0f
 #define DCDC_CLA_VOLTAGE_COMPENSATOR_A2  1.0f
@@ -107,7 +103,7 @@ static inline float32_t dcdc_cla_voltage_compensator_execute(void)
     float32_t temp;
 
     // TODO: How do we use dcdc_cla_v_out_2_raw_filtered?
-    x0 = DCDC_CLA_VOLTAGE_SETPOINT_RAW - dcdc_cla_v_out_1_raw_filtered;
+    x0 = dcdc_configuration_s.output_voltage_setpoint - dcdc_cla_v_out_1_raw_filtered;
     // TODO: Dynamic gain depending on error?
     temp = x0 * dcdc_cpu_to_cla_mem.voltage_loop_gain;
     temp *= DCDC_CLA_VOLTAGE_COMPENSATOR_A0;

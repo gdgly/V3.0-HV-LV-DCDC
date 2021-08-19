@@ -30,6 +30,11 @@
 #define DCDC_OUTPUT_CURRENT_OFFSET_MIN   -5.0f
 #define DCDC_OUTPUT_CURRENT_OFFSET_MAX    5.0f
 
+#define DCDC_OUTPUT_VOLTAGE_SETPOINT_MIN_x100   (48U * 100U)
+#define DCDC_OUTPUT_VOLTAGE_SETPOINT_MAX_x100   (60U * 100U)
+
+
+
 static bool sdp_factory_mode_enabled;
 
 
@@ -46,6 +51,7 @@ static uint32_t sdp_llc_secondary_heatsink_1_over_temperature_counter_get(void);
 static uint32_t sdp_llc_secondary_heatsink_2_over_temperature_counter_get(void);
 static uint32_t sdp_output_over_voltage_counter_get(void);
 static uint32_t sdp_dcdc_state_get(void);
+static uint32_t sdp_output_voltage_setpoint_x100_get(void);
 static uint32_t sdp_voltage_loop_gain_q16_get(void);
 static uint32_t sdp_current_loop_gain_q16_get(void);
 static uint32_t sdp_output_voltage_slope_q16_get(void);
@@ -64,6 +70,7 @@ static bool sdp_open_loop_enable_set(uint32_t value);
 static bool sdp_open_loop_primary_enable_set(uint32_t value);
 static bool sdp_open_loop_active_dummy_load_enable_set(uint32_t value);
 static bool sdp_open_loop_primary_frequency_set(uint32_t value);
+static bool sdp_output_voltage_setpoint_x100_set(uint32_t value);
 static bool sdp_voltage_loop_gain_q16_set(uint32_t value);
 static bool sdp_current_loop_gain_q16_set(uint32_t value);
 static bool sdp_enter_factory_mode_set(uint32_t value);
@@ -86,6 +93,7 @@ static const struct sdp_get sdp_get_array[] =
     { 26U, &sdp_llc_secondary_heatsink_2_over_temperature_counter_get},
     { 30U, &sdp_output_over_voltage_counter_get},
     { 40U, &sdp_dcdc_state_get},
+    { 50U, &sdp_output_voltage_setpoint_x100_get},
     { 51U, &sdp_voltage_loop_gain_q16_get},
     { 52U, &sdp_current_loop_gain_q16_get},
     {101U, &sdp_output_voltage_slope_q16_get},
@@ -107,6 +115,7 @@ static const struct sdp_set sdp_set_array[] =
     { 44U, &sdp_open_loop_primary_enable_set},
     { 46U, &sdp_open_loop_active_dummy_load_enable_set},
     { 47U, &sdp_open_loop_primary_frequency_set},
+    { 50U, &sdp_output_voltage_setpoint_x100_set},
     { 51U, &sdp_voltage_loop_gain_q16_set},
     { 52U, &sdp_current_loop_gain_q16_set},
     {100U, &sdp_enter_factory_mode_set},
@@ -226,6 +235,14 @@ static uint32_t sdp_output_over_voltage_counter_get(void)
 static uint32_t sdp_dcdc_state_get(void)
 {
     return dcdc_state_get();
+}
+
+//
+//
+//
+static uint32_t sdp_output_voltage_setpoint_x100_get(void)
+{
+    return (uint32_t)(dcdc_configuration_s.output_voltage_setpoint * 100.0f);
 }
 
 //
@@ -377,6 +394,20 @@ static bool sdp_open_loop_primary_frequency_set(uint32_t value)
 {
     uint16_t period = PWM_PERIOD_IN_COUNTS_UP_COUNTER(value);
     return dcdc_open_loop_primary_period_set(period);
+}
+
+//
+//
+//
+static bool sdp_output_voltage_setpoint_x100_set(uint32_t value)
+{
+    if ((value < DCDC_OUTPUT_VOLTAGE_SETPOINT_MIN_x100)
+            || (value > DCDC_OUTPUT_VOLTAGE_SETPOINT_MAX_x100))
+        return false;
+
+    dcdc_configuration_s.output_voltage_setpoint = (float32_t)value / 100.0f;
+    dcdc_output_voltage_thresholds_reverse_calibration_service();
+    return pers_configuration_store_initiate();
 }
 
 //

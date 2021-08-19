@@ -24,6 +24,7 @@
 #define DCDC_CMPSS_DAC_VALUE_OUTPUT_CURRENT_SR   500U
 
 struct dcdc_factory dcdc_factory_s;
+struct dcdc_configuration dcdc_configuration_s;
 
 
 
@@ -685,6 +686,14 @@ static void factory_defaults_load(void)
     dcdc_factory_s.output_current.offset = 0.0f;
 }
 
+//
+//
+//
+static void configuration_defaults_load(void)
+{
+    dcdc_configuration_s.output_voltage_setpoint =
+            DCDC_OUTPUT_VOLTAGE_SETPOINT_DEFAULT;
+}
 
 //
 //
@@ -729,8 +738,9 @@ void dcdc_init(void)
     spi_flash_init();
 
     factory_defaults_load();
+    configuration_defaults_load();
     pers_init(&dcdc_factory_s, sizeof(dcdc_factory_s),
-              NULL, 0U);
+              &dcdc_configuration_s, sizeof(dcdc_configuration_s));
 
     dcdc_sdp_init();
     dcdc_cla_init();

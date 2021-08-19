@@ -35,6 +35,7 @@
         - DCDC_CALIBRATION_I_OUT_OFFSET_DEFAULT) / DCDC_CALIBRATION_I_OUT_SLOPE_DEFAULT)
 
 
+#define DCDC_OUTPUT_VOLTAGE_SETPOINT_DEFAULT     54.0f
 #define DCDC_OUTPUT_CURRENT_SETPOINT_MAX         50.0f
 
 
@@ -81,6 +82,7 @@ struct dcdc_cpu_to_cla
     union dcdc_cpu_cla_union_t open_loop_primary_period;
 
     float32_t current_setpoint_max_raw;
+    float32_t output_voltage_setpoint_raw;
     float32_t voltage_loop_gain;
     float32_t current_loop_gain;
 };
@@ -101,6 +103,15 @@ struct dcdc_factory
     struct dcdc_calibration_constants output_voltage;
     struct dcdc_calibration_constants output_current;
 };
+
+// Important note: ALWAYS add new elements at the END
+// of this strucutre, never in the middle. Also, never
+// delete existing elements.
+struct dcdc_configuration
+{
+    float32_t output_voltage_setpoint;
+};
+
 
 
 extern void dcdc_init(void);
@@ -146,5 +157,6 @@ extern volatile struct dcdc_cla_to_cpu dcdc_cla_to_cpu_mem;
 extern volatile struct dcdc_cpu_to_cla dcdc_cpu_to_cla_mem;
 
 extern struct dcdc_factory dcdc_factory_s;
+extern struct dcdc_configuration dcdc_configuration_s;
 
 #endif

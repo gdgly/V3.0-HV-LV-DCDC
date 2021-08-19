@@ -566,6 +566,8 @@ void dcdc_output_voltage_thresholds_reverse_calibration_service(void)
             dcdc_output_voltage_threshold_reverse_calibration_calculate(DCDC_OUTPUT_VOLTAGE_OVP_CUTOFF);
     dcdc_output_voltage_ovp_qualify_raw =
             dcdc_output_voltage_threshold_reverse_calibration_calculate(DCDC_OUTPUT_VOLTAGE_OVP_QUALIFY);
+    dcdc_cpu_to_cla_mem.output_voltage_setpoint_raw = (float32_t)
+            dcdc_output_voltage_threshold_reverse_calibration_calculate(dcdc_configuration_s.output_voltage_setpoint);
 }
 
 //
